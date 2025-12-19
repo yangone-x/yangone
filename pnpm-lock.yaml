@@ -18,6 +18,9 @@ catalogs:
     '@eslint/js':
       specifier: ^9.39.1
       version: 9.39.2
+    '@inquirer/prompts':
+      specifier: ^8.1.0
+      version: 8.1.0
     '@manypkg/get-packages':
       specifier: ^3.0.0
       version: 3.1.0
@@ -450,7 +453,7 @@ importers:
   packages/map:
     dependencies:
       '@inquirer/prompts':
-        specifier: ^8.1.0
+        specifier: 'catalog:'
         version: 8.1.0(@types/node@24.10.4)
       chalk:
         specifier: 'catalog:'

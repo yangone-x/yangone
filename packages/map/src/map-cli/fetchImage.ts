@@ -109,18 +109,24 @@ export async function downloadImagesCli(
         incomplete: '░',
         width: 40,
         total: imageData.length,
-        renderThrottle: 100,
+        renderThrottle: imageData.length > 100 ? 500 : 100,
       },
     );
+
+    // 添加进度跟踪
+    let tickCount = 0;
+    const expectedTicks = imageData.length;
 
     const downRes = await downloadImages(imageData, finalSaveFolder, {
       ...mergeOptions.download,
       onTick({ filename }) {
+        tickCount++;
         progressBar?.tick({
           file: filename,
         });
       },
       onTickError({ url, filename, error }) {
+        tickCount++;
         process.stdout.clearLine(0);
         process.stdout.cursorTo(0);
         process.stdout.write(
@@ -132,6 +138,13 @@ export async function downloadImagesCli(
         if (progressBar) process.stdout.write('\n');
       },
     });
+
+    if (progressBar) {
+      if (tickCount >= expectedTicks && !progressBar.complete) {
+        progressBar.update(1); // 确保进度条到达100%
+      }
+      progressBar.terminate();
+    }
 
     console.log(
       chalk.green(`🎉 下载完成: 成功 ${downRes.successCount} 张, `) +
@@ -146,6 +159,7 @@ export async function downloadImagesCli(
     console.log(
       chalk.bold(`⚠ 检测到有 ${downRes.failCount} 个文件下载失败，正在重试...`),
     );
+    progressBar = null;
     downRes = await down(downRes.failFiles);
   }
   return downRes;

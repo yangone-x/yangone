@@ -216,7 +216,7 @@ export async function downloadImages(
 
     // 确保所有工作线程都已结束
     if (activeWorkers > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100 * activeWorkers));
     }
   } finally {
     keepAliveAgent.destroy();
