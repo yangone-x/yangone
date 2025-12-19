@@ -23,5 +23,9 @@
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     }
+  },
+  "dependencies": {
+    "dayjs": "catalog:",
+    "decimal.js": "catalog:"
   }
 }

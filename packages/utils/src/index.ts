@@ -1,4 +1,2 @@
-export * from './add';
-export function test(test = 'test') {
-  return test;
-}
+export * from './date';
+export * from './math';
