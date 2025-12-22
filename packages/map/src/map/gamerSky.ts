@@ -70,10 +70,7 @@ export function getIconUrls(mapInfo: MapInfo): [string, string][] {
 /**
  * 获取地标列表数据并保存到文件
  */
-export async function getLandmarkList(
-  mapInfo: MapInfo,
-  outputPath = '/landmarkList.json',
-) {
+export async function getLandmarkList(mapInfo: MapInfo) {
   const { map } = mapInfo;
 
   // 提取所有地标分类ID
@@ -114,17 +111,14 @@ export async function getLandmarkList(
   }
 
   const data: LandmarkListResponse = (await res.json()) as LandmarkListResponse;
-  fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
 
-  return {
-    outputPath,
-  };
+  return data;
 }
 
 /**
  * 处理地标数据并保存到文件
  */
-export function genPoints(options: any) {
+export async function genPoints(options: any) {
   const defaultOptions = {
     gameUrl: '',
     outputPath: '/points.json',
@@ -135,7 +129,10 @@ export function genPoints(options: any) {
 
   // 读取原始数据
   const categoryData: MapInfo = mergeOptions.mapInfo;
-  const landmarksData: LandmarkListResponse = mergeOptions.landmarksData;
+
+  const landmarksData: LandmarkListResponse = await getLandmarkList(
+    mergeOptions.mapInfo,
+  );
 
   if (!landmarksData.landmarks) {
     throw new Error('地标数据为空');

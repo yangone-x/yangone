@@ -37,9 +37,6 @@ async function run(options: GamerSkyOptions) {
         outputPath: '/maps',
         tileSize: 256,
       },
-      landmark: {
-        outputPath: '/json/landmarkList.json',
-      },
       points: {
         outputPath: '/points.json',
         offset: 1,
@@ -119,26 +116,12 @@ async function run(options: GamerSkyOptions) {
       }
     }
 
-    let landmarkPath = getPathWithBase(mergeOptions.landmark.outputPath);
-
-    if (options?.landmark && options.landmark?.enabled !== false) {
-      console.log(chalk.bold(`\n🚀 开始获取地标数据...`));
-      const res = await gamerSky.getLandmarkList(
-        mapInfo,
-        getPathWithBase(mergeOptions.landmark.outputPath),
-      );
-      landmarkPath = res.outputPath;
-      console.log(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
-    }
-
     if (options?.points && options.points?.enabled !== false) {
-      const landmarksData = await readJSON(landmarkPath);
       console.log(chalk.bold(`\n🚀 开始生成地标数据文件...`));
       const res = await gamerSky.genPoints({
         ...mergeOptions.points,
         gameUrl: path.basename(mergeOptions.basePath),
         mapInfo,
-        landmarksData,
         outputPath: getPathWithBase(mergeOptions.points.outputPath),
       });
       console.log(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));

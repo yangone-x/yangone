@@ -22,7 +22,7 @@ export interface GamerSkyOptions {
   } & CreateTilesOptions;
   /**
    * 地图数据文件路径
-   * @default "/json/mapInfo.json"
+   * @default "/mapInfo.json"
    */
   dataFilePath?: string;
   /**
@@ -43,21 +43,6 @@ export interface GamerSkyOptions {
      * @default "/icons"
      */
     saveFilePath?: string;
-  };
-  /**
-   * 坐标
-   */
-  landmark?: {
-    /**
-     * 是否启用
-     * @default false
-     */
-    enabled?: boolean;
-    /**
-     * 输出文件路径
-     * @default "/json/landmarkList.json"
-     */
-    outputPath?: string;
   };
   /**
    * 地图图片
@@ -139,7 +124,7 @@ export interface MapgenieOptions {
   } & CreateTilesOptions;
   /**
    * 地图数据文件路径
-   * @default "/json/mapInfo.json"
+   * @default "/mapInfo.json"
    */
   dataFilePath?: string;
   // 下载配置
