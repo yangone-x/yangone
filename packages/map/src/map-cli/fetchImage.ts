@@ -1,4 +1,6 @@
+/* eslint-disable unicorn/no-process-exit */
 /* eslint-disable no-console */
+
 import type { DownloadResult } from '../map';
 import type { ImageData } from '../map/types';
 import type { DownloadOptions } from './types';
@@ -7,7 +9,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import { input, select } from '@inquirer/prompts';
+import { cancel, isCancel, select, text } from '@clack/prompts';
 import chalk from 'chalk';
 import merge from 'lodash.merge';
 import ProgressBar from 'progress';
@@ -16,7 +18,6 @@ import logger from '../logger';
 import { downloadImages } from '../map';
 
 interface Options {
-  allowCancel?: boolean;
   basePath?: string;
   download?: DownloadOptions;
   saveFilePath?: string;
@@ -28,7 +29,6 @@ export async function downloadImagesCli(
 ): Promise<DownloadResult> {
   // 默认配置项
   const defaultOptions = {
-    allowCancel: true,
     basePath: '/',
     saveFilePath: '/images',
   };
@@ -49,44 +49,37 @@ export async function downloadImagesCli(
     fs.existsSync(finalSaveFolder) &&
     fs.readdirSync(finalSaveFolder).length > 0
   ) {
-    const choices = [
-      { name: `自动创建新文件夹（如 ${finalSaveFolder}_1）`, value: 'auto' },
-      { name: '手动输入新文件夹名称', value: 'custom' },
-      {
-        name: chalk.red('继续使用现有文件夹（可能覆盖文件）'),
-        value: 'overwrite',
-      },
-    ];
-
-    if (mergeOptions.allowCancel) {
-      choices.push({ name: chalk.yellow('❌ 取消下载'), value: 'cancel' });
-    }
-
     const answer = await select({
       message: chalk.yellow(`⚠ 文件夹 "${finalSaveFolder}" 已存在且不为空`),
-      choices,
-      default: 'auto',
+      options: [
+        { label: `自动创建新文件夹（如 ${finalSaveFolder}_1）`, value: 'auto' },
+        { label: '手动输入新文件夹名称', value: 'custom' },
+        {
+          label: chalk.red('继续使用现有文件夹（可能覆盖文件）'),
+          value: 'overwrite',
+        },
+      ],
     });
 
-    if (answer === 'cancel') {
-      console.log(chalk.yellow('🛑 下载任务已取消'));
-      return {
-        failCount: 0,
-        failFiles: [],
-        successCount: 0,
-      };
+    if (isCancel(answer)) {
+      cancel(chalk.yellow('🛑 下载任务已取消'));
+      process.exit(0);
     }
 
     if (answer === 'custom') {
-      const answer = await input({
+      const answer = await text({
         message: '请输入新文件夹名称:',
         validate: (input) => {
           if (!input.trim()) return '文件夹名不能为空';
           if (/[<>:"/\\|?*]/.test(input)) return '不能包含特殊字符';
-          return true;
         },
       });
-      finalSaveFolder = path.join(mergeOptions.basePath, answer);
+
+      if (isCancel(answer)) {
+        cancel(chalk.yellow('🛑 下载任务已取消'));
+        process.exit(0);
+      }
+      finalSaveFolder = path.join(mergeOptions.basePath, answer.toString());
     } else if (answer === 'auto') {
       finalSaveFolder = getAutoIncrementedFolder(finalSaveFolder);
     }

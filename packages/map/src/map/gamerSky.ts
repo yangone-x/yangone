@@ -127,7 +127,7 @@ export async function getLandmarkList(
 export function genPoints(options: any) {
   const defaultOptions = {
     gameUrl: '',
-    outputPath: '/points.js',
+    outputPath: '/points.json',
     offset: 1,
   };
 
@@ -210,8 +210,10 @@ export function genPoints(options: any) {
   });
 
   // 保存结果
-  const fileContent = `// 自动生成的地标数据\nvar points = ${JSON.stringify(processedCategories, null, 2)};`;
-  fs.writeFileSync(mergeOptions.outputPath, fileContent);
+  fs.writeFileSync(
+    mergeOptions.outputPath,
+    JSON.stringify(processedCategories, null, 2),
+  );
 
   return {
     outputPath: mergeOptions.outputPath,

@@ -9,9 +9,9 @@ export default defineBuildConfig({
   // 排除外部依赖
   externals: [
     'chalk',
+    '@clack/prompts',
     'decimal.js',
     'exceljs',
-    '@inquirer/prompts',
     'lodash.merge',
     'node-fetch',
     'progress',

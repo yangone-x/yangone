@@ -1,6 +1,6 @@
 {
   "name": "@yangone/map",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "keywords": [],
   "license": "ISC",
@@ -32,7 +32,7 @@
     }
   },
   "dependencies": {
-    "@inquirer/prompts": "catalog:",
+    "@clack/prompts": "catalog:",
     "chalk": "catalog:",
     "decimal.js": "catalog:",
     "exceljs": "catalog:",

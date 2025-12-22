@@ -41,7 +41,7 @@ async function run(options: GamerSkyOptions) {
         outputPath: '/json/landmarkList.json',
       },
       points: {
-        outputPath: '/points.js',
+        outputPath: '/points.json',
         offset: 1,
       },
     };

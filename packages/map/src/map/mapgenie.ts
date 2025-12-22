@@ -48,7 +48,7 @@ interface ProcessedPoint {
 interface ProcessedCategoryItem {
   data: ProcessedPoint[];
   display_type: string;
-  icon: string;
+  iconFont: string;
   id: number;
   num: number;
   title: string;
@@ -66,7 +66,6 @@ interface ProcessedCategoryGroup {
  */
 export async function genPoints(options: any) {
   const defaultOptions = {
-    gameUrl: '',
     outputPath: '/points.json',
     offset: 1,
   };
@@ -81,7 +80,6 @@ export async function genPoints(options: any) {
   }
 
   // 处理分类数据
-  let iconIndex = 1;
   const processedCategories: ProcessedCategoryGroup[] = categoryData.groups.map(
     (group, index) => {
       return {
@@ -92,7 +90,6 @@ export async function genPoints(options: any) {
           return {
             title: catalog.title,
             num: 0,
-            icon: `https://img.ali213.com/lmao/tools/${mergeOptions.gameUrl}/icons/${iconIndex++}.png`,
             iconFont: catalog.icon,
             id: catalog.id,
             data: [] as ProcessedPoint[],
