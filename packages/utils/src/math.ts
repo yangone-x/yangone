@@ -28,4 +28,11 @@ function divide(a: number, b: number) {
   return new Decimal(a).div(b).toNumber();
 }
 
-export { add, Decimal, divide, multiply, subtract };
+const Math = {
+  add,
+  divide,
+  multiply,
+  subtract,
+};
+
+export { Decimal, Math };

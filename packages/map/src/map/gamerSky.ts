@@ -120,7 +120,6 @@ export async function getLandmarkList(mapInfo: MapInfo) {
  */
 export async function genPoints(options: any) {
   const defaultOptions = {
-    gameUrl: '',
     outputPath: '/points.json',
     offset: 1,
   };
@@ -146,7 +145,7 @@ export async function genPoints(options: any) {
       data: group.landmarkCatalogs.map((catalog) => ({
         title: catalog.name,
         num: 0,
-        icon: `https://img.ali213.com/lmao/tools/${mergeOptions.gameUrl}/icons/${iconIndex++}.png`,
+        icon: `/icons/${iconIndex++}.png`,
         id: catalog.id,
         data: [] as ProcessedPoint[],
       })),

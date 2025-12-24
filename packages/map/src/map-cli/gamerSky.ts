@@ -120,7 +120,6 @@ async function run(options: GamerSkyOptions) {
       console.log(chalk.bold(`\n🚀 开始生成地标数据文件...`));
       const res = await gamerSky.genPoints({
         ...mergeOptions.points,
-        gameUrl: path.basename(mergeOptions.basePath),
         mapInfo,
         outputPath: getPathWithBase(mergeOptions.points.outputPath),
       });
