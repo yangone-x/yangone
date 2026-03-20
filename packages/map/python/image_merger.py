@@ -1,7 +1,10 @@
-from PIL import Image
+from PIL import Image, ImageFile
 import os
 import json
 import sys
+
+# 自动处理截断的图像文件
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 def merge_images(imagesPath, outputPath, direction='horizontal', imagesPerRow=5, imageWidth=100, imageHeight=100):
     """
