@@ -39,6 +39,7 @@ async function run(options: GamerSkyOptions) {
       },
       points: {
         outputPath: '/points.json',
+        outputAreaPath: '/points_area.json',
         offset: 1,
       },
     };
@@ -122,6 +123,7 @@ async function run(options: GamerSkyOptions) {
         ...mergeOptions.points,
         mapInfo,
         outputPath: getPathWithBase(mergeOptions.points.outputPath),
+        outputAreaPath: getPathWithBase(mergeOptions.points.outputAreaPath),
       });
       console.log(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
     }

@@ -15,6 +15,11 @@ interface LandmarkCatalogGroup {
 
 interface MapInfo {
   map: {
+    gameMapAreas?: {
+      name: string;
+      x: number;
+      y: number;
+    }[];
     id: number;
     landmarkCatalogGroups: LandmarkCatalogGroup[];
   };
@@ -205,11 +210,39 @@ export async function genPoints(options: any) {
     });
   });
 
+  const areasData: any[] = [];
+
+  if (categoryData.map.gameMapAreas?.length) {
+    categoryData.map.gameMapAreas.forEach((item) => {
+      // 高精度坐标转换
+      const x = new Decimal(item.x)
+        .plus(X_OFFSET)
+        .times(X_COEFFICIENT)
+        .toNumber();
+      const y = new Decimal(item.y)
+        .minus(Y_OFFSET)
+        .times(Y_COEFFICIENT)
+        .toNumber();
+      areasData.push({
+        title: item.name,
+        x,
+        y,
+      });
+    });
+  }
+
   // 保存结果
   fs.writeFileSync(
     mergeOptions.outputPath,
     JSON.stringify(processedCategories, null, 2),
   );
+
+  if (areasData.length > 0) {
+    fs.writeFileSync(
+      mergeOptions.outputAreaPath,
+      JSON.stringify(areasData, null, 2),
+    );
+  }
 
   return {
     outputPath: mergeOptions.outputPath,

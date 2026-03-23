@@ -100,8 +100,13 @@ export interface GamerSkyOptions {
      */
     offset?: number;
     /**
+     * 输出区域位置文件路径
+     * @default "/points_area.json"
+     */
+    outputAreaPath?: string;
+    /**
      * 输出文件路径
-     * @default "/points.js"
+     * @default "/points.json"
      */
     outputPath?: string;
   };
@@ -190,7 +195,7 @@ export interface MapgenieOptions {
     offset?: number;
     /**
      * 输出文件路径
-     * @default "/points.js"
+     * @default "/points.json"
      */
     outputPath?: string;
   };
