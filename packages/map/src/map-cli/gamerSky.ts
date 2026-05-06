@@ -26,7 +26,7 @@ async function run(options: GamerSkyOptions) {
       },
       mergeImages: {
         imagesPath: '/images',
-        outputPath: '/merged_image.jpg',
+        outputPath: '/merged_image.webp',
         direction: 'horizontal',
         imagesPerRow: 64,
         imageWidth: 256,

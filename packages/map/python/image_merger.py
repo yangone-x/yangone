@@ -20,7 +20,7 @@ def merge_images(imagesPath, outputPath, direction='horizontal', imagesPerRow=5,
         # 获取所有图片文件（忽略非图片文件）
         image_files = [
             f for f in os.listdir(imagesPath) 
-            if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif'))
+            if f.lower().endswith(('webp', '.png', '.jpg', '.jpeg', '.bmp', '.gif'))
         ]
         
         if not image_files:

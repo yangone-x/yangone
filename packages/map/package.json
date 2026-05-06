@@ -33,12 +33,17 @@
   },
   "dependencies": {
     "@clack/prompts": "catalog:",
+    "@jimp/core": "^1.6.1",
+    "@jimp/wasm-webp": "^1.6.1",
+    "canvas": "^3.2.3",
     "chalk": "catalog:",
     "decimal.js": "catalog:",
     "exceljs": "catalog:",
+    "jimp": "^1.6.1",
     "lodash.merge": "catalog:",
     "node-fetch": "catalog:",
-    "progress": "catalog:"
+    "progress": "catalog:",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/lodash.merge": "catalog:",

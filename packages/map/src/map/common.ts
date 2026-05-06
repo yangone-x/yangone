@@ -17,16 +17,16 @@ export function genImageUrls(
   }
 
   const urls: [string, string][] = [];
-  let k = 1;
-  const totalImages = (high - low) ** 2;
-  const zeroPadding = totalImages.toString().length;
+  // let k = 1;
+  // const totalImages = (high - low) ** 2;
+  // const zeroPadding = totalImages.toString().length;
 
   for (let i = low; i < high; ++i) {
     for (let j = low; j < high; ++j) {
       const targetUrl = replacePlaceholders(url, i, j);
-      const imgName = k.toString().padStart(zeroPadding, '0');
-      urls.push([targetUrl, `${imgName}.jpg`]);
-      k++;
+      // const imgName = k.toString().padStart(zeroPadding, '0');
+      urls.push([targetUrl, `${i - low}_${j - low}.webp`]);
+      // k++;
     }
   }
   return urls;
