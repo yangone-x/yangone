@@ -1,14 +1,17 @@
-/* eslint-disable no-console */
+// oxlint-disable no-console
+
 import type { MapgenieOptions } from './types';
 
 import path from 'node:path';
 
 import chalk from 'chalk';
-import merge from 'lodash.merge';
+import { merge } from 'lodash-es';
 
 import { readJSON } from '../fs';
-import { createTiles, genImageUrls, mapgenie, mergeImages } from '../map';
+import { genImageUrls, mapgenie } from '../map';
 import { downloadImagesCli } from './fetchImage';
+import { mergeImagesCli } from './mergeImages';
+import { sliceImageCli } from './sliceImage';
 
 async function run(options: MapgenieOptions) {
   try {
@@ -20,6 +23,7 @@ async function run(options: MapgenieOptions) {
         low: 8128,
         high: 8192,
         url: '',
+        downFileExt: 'png',
       },
       mergeImages: {
         imagesPath: '/images',
@@ -30,7 +34,7 @@ async function run(options: MapgenieOptions) {
         imageHeight: 256,
       },
       createTiles: {
-        imagesPath: '/merged_image.jpg',
+        imagePath: '/merged_image.jpg',
         outputPath: '/maps',
         tileSize: 256,
       },
@@ -70,6 +74,7 @@ async function run(options: MapgenieOptions) {
         mergeOptions.maps.low,
         mergeOptions.maps.high,
         mergeOptions.maps.url,
+        mergeOptions.maps.downFileExt,
       );
       console.log(chalk.bold(`🚀 开始下载地图图片...`));
       downRes = await downloadImagesCli(imageUrls, {
@@ -85,31 +90,19 @@ async function run(options: MapgenieOptions) {
       );
     } else {
       if (options?.mergeImages && options.mergeImages?.enabled !== false) {
-        console.log(chalk.bold(`\n🚀 开始合并图片...`));
-        const mergeRes = await mergeImages({
+        await mergeImagesCli({
           ...mergeOptions.mergeImages,
           imagesPath: getPathWithBase(mergeOptions.mergeImages.imagesPath),
           outputPath: getPathWithBase(mergeOptions.mergeImages.outputPath),
         });
-        console.log(
-          chalk.green(`✅ 合并图片成功，尺寸：${mergeRes.mergedSize}`),
-        );
-        console.log(chalk(`📂 文件保存位置: ${mergeRes.outputPath}`));
       }
 
       if (options?.createTiles && options.createTiles?.enabled !== false) {
-        console.log(chalk.bold(`\n🚀 开始生成瓦片地图...`));
-        const createRes = await createTiles({
+        await sliceImageCli({
           ...mergeOptions.createTiles,
-          imagesPath: getPathWithBase(mergeOptions.createTiles.imagesPath),
+          imagePath: getPathWithBase(mergeOptions.createTiles.imagePath),
           outputPath: getPathWithBase(mergeOptions.createTiles.outputPath),
         });
-        console.log(
-          chalk.green(
-            `✅ 生成瓦片地图成功，文件数：${createRes.tilesGenerated}`,
-          ),
-        );
-        console.log(chalk(`📂 文件保存位置: ${createRes.outputPath}`));
       }
     }
 

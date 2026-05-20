@@ -33,11 +33,6 @@ class Logger {
     // 确定日志目录，优先使用选项中的目录，否则使用项目根目录下的logs文件夹
     this.logDir = options.logDir || path.join(this.findProjectRoot(), 'logs');
     this.level = options.level || 'info';
-
-    // 确保日志目录存在
-    this.ensureDir().catch((error) => {
-      console.error('初始化日志目录失败:', error);
-    });
   }
 
   /**

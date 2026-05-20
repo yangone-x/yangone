@@ -70,7 +70,7 @@ export async function vue(): Promise<Linter.Config[]> {
         ],
         'vue/component-name-in-template-casing': ['error', 'PascalCase'],
         'vue/component-options-name-casing': ['error', 'PascalCase'],
-        'vue/custom-event-name-casing': ['error', 'camelCase'],
+        'vue/custom-event-name-casing': ['error', 'kebab-case'],
         'vue/define-macros-order': [
           'error',
           {
@@ -128,7 +128,6 @@ export async function vue(): Promise<Linter.Config[]> {
           },
         ],
         'vue/one-component-per-file': 'error',
-        'vue/prefer-import-from-vue': 'error',
         'vue/prefer-separate-static-class': 'error',
         'vue/prefer-template': 'error',
         'vue/prop-name-casing': ['error', 'camelCase'],

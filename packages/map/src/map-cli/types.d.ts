@@ -1,9 +1,6 @@
-import type {
-  CreateTilesOptions,
-  ExcelToPointsOptions,
-  MergeImagesOptions,
-  PointsToExcelOptions,
-} from '../map/types';
+import type { ExcelToPointsOptions, PointsToExcelOptions } from '../map/types';
+
+import { MergeImagesOptions, SliceImageOptions } from '../index';
 
 export interface GamerSkyOptions {
   /**
@@ -19,7 +16,7 @@ export interface GamerSkyOptions {
      * @default false
      */
     enabled?: boolean;
-  } & CreateTilesOptions;
+  } & SliceImageOptions;
   /**
    * 地图数据文件路径
    * @default "/mapInfo.json"
@@ -49,6 +46,11 @@ export interface GamerSkyOptions {
    */
   maps?: {
     /**
+     * 下载文件后缀
+     * @default "png"
+     */
+    downFileExt?: string;
+    /**
      * 是否启用
      * @default false
      */
@@ -70,7 +72,7 @@ export interface GamerSkyOptions {
     saveFilePath?: string;
     /**
      * 地图图片地址
-     * @example https://xxxxxx/@{low}_@{high}.jpg
+     * @example https://xxxxxx/{x}_{y}.png
      */
     url: string;
   };
@@ -96,7 +98,6 @@ export interface GamerSkyOptions {
     /**
      * 偏移
      * @default 1
-     * @example 1[64*256=16384]；0.5[32*128=4096]
      */
     offset?: number;
     /**
@@ -126,7 +127,7 @@ export interface MapgenieOptions {
      * @default false
      */
     enabled?: boolean;
-  } & CreateTilesOptions;
+  } & SliceImageOptions;
   /**
    * 地图数据文件路径
    * @default "/mapInfo.json"
@@ -142,6 +143,11 @@ export interface MapgenieOptions {
    * 地图图片
    */
   maps?: {
+    /**
+     * 下载文件后缀
+     * @default "png"
+     */
+    downFileExt?: string;
     /**
      * 是否启用
      * @default false
@@ -164,7 +170,7 @@ export interface MapgenieOptions {
     saveFilePath?: string;
     /**
      * 地图图片地址
-     * @example https://xxxxxx/@{low}_@{high}.jpg
+     * @example https://xxxxxx/{x}_{y}.png
      */
     url: string;
   };

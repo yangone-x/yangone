@@ -11,31 +11,19 @@ export function genImageUrls(
   low: number,
   high: number,
   url: string,
+  ext: string = 'png',
 ): ImageWithFilename[] {
   if (low >= high) {
     throw new Error(`起始索引必须小于结束索引: low=${low}, high=${high}`);
   }
 
   const urls: [string, string][] = [];
-  // let k = 1;
-  // const totalImages = (high - low) ** 2;
-  // const zeroPadding = totalImages.toString().length;
 
   for (let i = low; i < high; ++i) {
     for (let j = low; j < high; ++j) {
-      const targetUrl = replacePlaceholders(url, i, j);
-      // const imgName = k.toString().padStart(zeroPadding, '0');
-      urls.push([targetUrl, `${i - low}_${j - low}.webp`]);
-      // k++;
+      const targetUrl = url.replace('{x}', String(i)).replace('{y}', String(j));
+      urls.push([targetUrl, `${i - low}_${j - low}.${ext}`]);
     }
   }
   return urls;
-}
-
-function replacePlaceholders(url: string, low: number, high: number) {
-  // 计算两个占位符的起始索引
-  const lowIndex = url.indexOf('@{low}');
-  const highIndex = url.indexOf('@{high}');
-
-  return `${url.slice(0, lowIndex)}${low}${url.slice(lowIndex + 6, highIndex)}${high}${url.slice(highIndex + 7)}`;
 }

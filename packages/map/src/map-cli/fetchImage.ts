@@ -1,9 +1,7 @@
-/* eslint-disable unicorn/no-process-exit */
-/* eslint-disable no-console */
-
-import type { DownloadResult } from '../map';
+// oxlint-disable no-console
+// oxlint-disable unicorn/no-process-exit
+import type { DownloadImagesOptions, DownloadResult } from '../map';
 import type { ImageData } from '../map/types';
-import type { DownloadOptions } from './types';
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -11,7 +9,7 @@ import process from 'node:process';
 
 import { cancel, isCancel, select, text } from '@clack/prompts';
 import chalk from 'chalk';
-import merge from 'lodash.merge';
+import { merge } from 'lodash-es';
 import ProgressBar from 'progress';
 
 import logger from '../logger';
@@ -19,7 +17,7 @@ import { downloadImages } from '../map';
 
 interface Options {
   basePath?: string;
-  download?: DownloadOptions;
+  download?: DownloadImagesOptions;
   saveFilePath?: string;
 }
 
@@ -70,7 +68,7 @@ export async function downloadImagesCli(
       const answer = await text({
         message: '请输入新文件夹名称:',
         validate: (input) => {
-          if (!input.trim()) return '文件夹名不能为空';
+          if (!input?.trim()) return '文件夹名不能为空';
           if (/[<>:"/\\|?*]/.test(input)) return '不能包含特殊字符';
         },
       });

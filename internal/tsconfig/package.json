@@ -1,7 +1,14 @@
 {
   "name": "@yangone/tsconfig",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
+  "homepage": "https://github.com/yangone-x/yangone",
+  "bugs": "https://github.com/yangone-x/yangone/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangone-x/yangone.git",
+    "directory": "internal/tsconfig"
+  },
   "license": "MIT",
   "type": "module",
   "files": [

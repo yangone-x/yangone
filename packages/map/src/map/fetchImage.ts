@@ -5,10 +5,10 @@ import https from 'node:https';
 import path from 'node:path';
 import { URL } from 'node:url';
 
-import merge from 'lodash.merge';
+import { merge } from 'lodash-es';
 import fetch from 'node-fetch';
 
-interface DownloadOptions {
+export interface DownloadImagesOptions {
   /**
    * 自动重命名
    * @default false
@@ -61,7 +61,7 @@ export interface DownloadResult {
 export async function downloadImages(
   imageData: ImageData,
   saveFolder = '/images',
-  options: DownloadOptions = {},
+  options: DownloadImagesOptions = {},
 ): Promise<DownloadResult> {
   // 默认配置项
   const defaultOptions = {

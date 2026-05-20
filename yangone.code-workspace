@@ -1,0 +1,44 @@
+{
+  "folders": [
+    {
+      "name": "@yangone/commitlint-config",
+      "path": "internal/lint-configs/commitlint-config"
+    },
+    {
+      "name": "@yangone/eslint-config",
+      "path": "internal/lint-configs/eslint-config"
+    },
+    {
+      "name": "@yangone/oxfmt-config",
+      "path": "internal/lint-configs/oxfmt-config"
+    },
+    {
+      "name": "@yangone/oxlint-config",
+      "path": "internal/lint-configs/oxlint-config"
+    },
+    {
+      "name": "@yangone/stylelint-config",
+      "path": "internal/lint-configs/stylelint-config"
+    },
+    {
+      "name": "@yangone/node-utils",
+      "path": "internal/node-utils"
+    },
+    {
+      "name": "@yangone/tsconfig",
+      "path": "internal/tsconfig"
+    },
+    {
+      "name": "@yangone/climb-map",
+      "path": "packages/map"
+    },
+    {
+      "name": "@yangone/turbo-run",
+      "path": "scripts/turbo-run"
+    },
+    {
+      "name": "@yangone/vsh",
+      "path": "scripts/vsh"
+    }
+  ]
+}

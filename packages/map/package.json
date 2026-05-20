@@ -1,13 +1,14 @@
 {
   "name": "@yangone/climb-map",
   "version": "0.0.3",
-  "description": "",
-  "keywords": [],
-  "license": "ISC",
-  "author": "yangone",
-  "scripts": {
-    "build": "unbuild",
-    "stub": "pnpm unbuild --stub"
+  "homepage": "https://github.com/yangone-x/yangone",
+  "bugs": "https://github.com/yangone-x/yangone/issues",
+  "repository": "packages/climb-map",
+  "license": "MIT",
+  "type": "module",
+   "scripts": {
+    "build": "pnpm exec tsdown",
+    "stub": "pnpm run build"
   },
   "files": [
     "LICENSE",
@@ -15,10 +16,6 @@
     "dist",
     "python/"
   ],
-  "sideEffects": false,
-  "main": "./dist/index.mjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -31,22 +28,38 @@
       "default": "./dist/map-cli/index.mjs"
     }
   },
+  "publishConfig": {
+    "exports": {
+      ".": {
+      "types": "./src/index.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    },
+    "./map-cli": {
+      "types": "./src/map-cli/index.ts",
+      "import": "./dist/map-cli/index.mjs",
+      "default": "./dist/map-cli/index.mjs"
+    }
+    },
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "@clack/prompts": "catalog:",
-    "@jimp/core": "^1.6.1",
-    "@jimp/wasm-webp": "^1.6.1",
-    "canvas": "^3.2.3",
+    "@jimp/core": "catalog:",
+    "@jimp/wasm-webp": "catalog:",
+    "canvas": "catalog:",
     "chalk": "catalog:",
     "decimal.js": "catalog:",
     "exceljs": "catalog:",
-    "jimp": "^1.6.1",
-    "lodash.merge": "catalog:",
+    "jimp": "catalog:",
+    "lodash-es": "catalog:",
     "node-fetch": "catalog:",
+    "p-limit": "catalog:",
     "progress": "catalog:",
-    "sharp": "^0.34.5"
+    "sharp": "catalog:"
   },
   "devDependencies": {
-    "@types/lodash.merge": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/progress": "catalog:"
   }
 }

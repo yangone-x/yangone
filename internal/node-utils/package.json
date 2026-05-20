@@ -1,11 +1,18 @@
 {
   "name": "@yangone/node-utils",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "private": true,
+  "homepage": "https://github.com/yangone-x/yangone",
+  "bugs": "https://github.com/yangone-x/yangone/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangone-x/yangone.git",
+    "directory": "internal/node-utils"
+  },
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "stub": "pnpm unbuild --stub"
+    "stub": "node ./scripts/build.mjs"
   },
   "files": [
     "dist"
@@ -15,7 +22,7 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     }
@@ -30,7 +37,6 @@
     "find-up": "catalog:",
     "ora": "catalog:",
     "pkg-types": "catalog:",
-    "prettier": "catalog:",
     "rimraf": "catalog:"
   }
 }

@@ -1,7 +1,13 @@
 {
   "name": "@yangone/stylelint-config",
-  "version": "1.0.0",
-  "private": true,
+  "version": "0.0.2",
+  "homepage": "https://github.com/yangone-x/yangone",
+  "bugs": "https://github.com/yangone-x/yangone/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangone-x/yangone.git",
+    "directory": "internal/lint-configs/stylelint-config"
+  },
   "license": "MIT",
   "type": "module",
   "files": [
@@ -15,22 +21,27 @@
       "default": "./index.mjs"
     }
   },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./index.mjs",
+        "default": "./index.mjs"
+      }
+    },
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "@stylistic/stylelint-plugin": "catalog:",
-    "stylelint-config-recess-order": "catalog:",
-    "stylelint-scss": "catalog:"
-  },
-  "devDependencies": {
     "postcss": "catalog:",
     "postcss-html": "catalog:",
     "postcss-scss": "catalog:",
-    "prettier": "catalog:",
     "stylelint": "catalog:",
+    "stylelint-config-recess-order": "catalog:",
     "stylelint-config-recommended": "catalog:",
     "stylelint-config-recommended-scss": "catalog:",
     "stylelint-config-recommended-vue": "catalog:",
     "stylelint-config-standard": "catalog:",
     "stylelint-order": "catalog:",
-    "stylelint-prettier": "catalog:"
+    "stylelint-scss": "catalog:"
   }
 }

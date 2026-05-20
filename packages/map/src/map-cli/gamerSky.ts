@@ -1,14 +1,17 @@
-/* eslint-disable no-console */
+// oxlint-disable no-console
+
 import type { GamerSkyOptions } from './types';
 
 import path from 'node:path';
 
 import chalk from 'chalk';
-import merge from 'lodash.merge';
+import { merge } from 'lodash-es';
 
 import { readJSON } from '../fs';
-import { createTiles, gamerSky, genImageUrls, mergeImages } from '../map';
+import { gamerSky, genImageUrls } from '../map';
 import { downloadImagesCli } from './fetchImage';
+import { mergeImagesCli } from './mergeImages';
+import { sliceImageCli } from './sliceImage';
 
 async function run(options: GamerSkyOptions) {
   try {
@@ -23,17 +26,20 @@ async function run(options: GamerSkyOptions) {
         low: 8128,
         high: 8192,
         url: '',
+        downFileExt: 'png',
       },
       mergeImages: {
         imagesPath: '/images',
-        outputPath: '/merged_image.webp',
+        outputPath: '/merged_image.jpg',
         direction: 'horizontal',
-        imagesPerRow: 64,
+        cols: 64,
+        rows: 64,
         imageWidth: 256,
         imageHeight: 256,
+        imagePattern: '{x}_{y}.png',
       },
       createTiles: {
-        imagesPath: '/merged_image.jpg',
+        imagePath: '/merged_image.jpg',
         outputPath: '/maps',
         tileSize: 256,
       },
@@ -74,6 +80,7 @@ async function run(options: GamerSkyOptions) {
         mergeOptions.maps.low,
         mergeOptions.maps.high,
         mergeOptions.maps.url,
+        mergeOptions.maps.downFileExt,
       );
       console.log(chalk.bold(`🚀 开始下载地图图片...`));
       downRes = await downloadImagesCli(imageUrls, {
@@ -89,31 +96,19 @@ async function run(options: GamerSkyOptions) {
       );
     } else {
       if (options?.mergeImages && options.mergeImages?.enabled !== false) {
-        console.log(chalk.bold(`\n🚀 开始合并图片...`));
-        const mergeRes = await mergeImages({
+        await mergeImagesCli({
           ...mergeOptions.mergeImages,
           imagesPath: getPathWithBase(mergeOptions.mergeImages.imagesPath),
           outputPath: getPathWithBase(mergeOptions.mergeImages.outputPath),
         });
-        console.log(
-          chalk.green(`✅ 合并图片成功，尺寸：${mergeRes.mergedSize}`),
-        );
-        console.log(chalk(`📂 文件保存位置: ${mergeRes.outputPath}`));
       }
 
       if (options?.createTiles && options.createTiles?.enabled !== false) {
-        console.log(chalk.bold(`\n🚀 开始生成瓦片地图...`));
-        const createRes = await createTiles({
+        await sliceImageCli({
           ...mergeOptions.createTiles,
-          imagesPath: getPathWithBase(mergeOptions.createTiles.imagesPath),
+          imagePath: getPathWithBase(mergeOptions.createTiles.imagePath),
           outputPath: getPathWithBase(mergeOptions.createTiles.outputPath),
         });
-        console.log(
-          chalk.green(
-            `✅ 生成瓦片地图成功，文件数：${createRes.tilesGenerated}`,
-          ),
-        );
-        console.log(chalk(`📂 文件保存位置: ${createRes.outputPath}`));
       }
     }
 

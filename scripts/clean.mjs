@@ -106,7 +106,7 @@ async function cleanTargetsRecursively(currentDir, targets, depth = 0) {
   }
 }
 
-(async function startCleanup() {
+async function startCleanup() {
   // 要删除的目录及文件名称
   const targets = ['node_modules', 'dist', '.turbo', 'dist.zip'];
   const deleteLockFile = process.argv.includes('--del-lock');
@@ -138,4 +138,6 @@ async function cleanTargetsRecursively(currentDir, targets, depth = 0) {
     console.error(`💥 Unexpected error during cleanup: ${error.message}`);
     process.exit(1);
   }
-})();
+}
+
+await startCleanup();

@@ -1,0 +1,43 @@
+{
+  "name": "@yangone/oxlint-config",
+  "version": "0.0.1",
+  "homepage": "https://github.com/yangone-x/yangone",
+  "bugs": "https://github.com/yangone-x/yangone/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangone-x/yangone.git",
+    "directory": "internal/lint-configs/oxlint-config"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "stub": "pnpm exec tsdown"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      }
+    }
+  },
+  "dependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "catalog:",
+    "eslint-plugin-better-tailwindcss": "catalog:",
+    "eslint-plugin-command": "catalog:",
+    "oxlint": "catalog:"
+  }
+}
