@@ -11,7 +11,7 @@ import sharp from 'sharp';
 export interface SliceImageOptions {
   /**
    * 最大并发下载数
-   * @default 5
+   * @default os.availableParallelism()
    */
   concurrency?: number;
   /**
@@ -32,6 +32,13 @@ export interface SliceImageOptions {
    * @default '/maps'
    */
   outputPath?: string;
+  /**
+   * 输出质量 (0-100)
+   * PNG: 忽略此值，使用 compressionLevel
+   * JPEG/WEBP: 控制质量
+   * @default 80
+   */
+  quality?: number;
   /**
    * Sharp 的像素限制
    * @default 1_000_000_000
@@ -57,16 +64,17 @@ export async function sliceImage(options: SliceImageOptions) {
     outputPath: '/maps',
     tileSize: 256,
     maxZoom: 6,
-    concurrency: 5,
+    concurrency: os.availableParallelism(),
     tileExt: 'png',
     sharpPixelLimit: 1_000_000_000,
+    quality: 80,
   };
 
   const mergeOptions = merge(defaultOptions, options);
 
-  const DEFAULT_CONCURRENCY = Math.min(
+  const DEFAULT_CONCURRENCY = Math.max(
     mergeOptions.concurrency,
-    os.cpus().length,
+    os.availableParallelism(),
   );
 
   if (!fsSync.existsSync(mergeOptions.imagePath)) {
@@ -91,6 +99,30 @@ export async function sliceImage(options: SliceImageOptions) {
   // 预创建根目录
   await fs.mkdir(absoluteOutRoot, { recursive: true });
 
+  // 根据格式确定编码器配置
+  const getEncoder = (pipeline: sharp.Sharp) => {
+    const ext = mergeOptions.tileExt.toLowerCase();
+    const quality = mergeOptions.quality;
+
+    switch (ext) {
+      case 'jpeg':
+      case 'jpg': {
+        return pipeline.jpeg({ quality, progressive: true });
+      }
+      case 'webp': {
+        return pipeline.webp({ quality, effort: 2 });
+      } // effort 2 是速度与压缩率的平衡
+      default: {
+        // PNG 压缩等级 9 非常慢，建议降至 6 或 4
+        return pipeline.png({
+          quality: 100, // PNG 是无损的，quality 参数在某些版本无效，主要靠 compressionLevel
+          compressionLevel: 6,
+          progressive: false,
+        });
+      }
+    }
+  };
+
   for (let z = 0; z <= mergeOptions.maxZoom; z++) {
     const scaleFactor = 1 / 2 ** (mergeOptions.maxZoom - z);
     const currW = Math.floor(originW * scaleFactor);
@@ -98,11 +130,12 @@ export async function sliceImage(options: SliceImageOptions) {
 
     if (currW < 1 || currH < 1) continue;
 
+    // 为当前层级创建一个基础的 resized 实例
     const scaledImage = sharp(mergeOptions.imagePath, {
       limitInputPixels: mergeOptions.sharpPixelLimit,
     }).resize(currW, currH, {
       fit: 'fill',
-      kernel: sharp.kernel.lanczos3,
+      kernel: sharp.kernel.lanczos3, // Lanczos 质量好但稍慢，如需极速可改为 'nearest' 或 'biliner'
     });
 
     const cols = Math.ceil(currW / mergeOptions.tileSize);
@@ -154,6 +187,9 @@ export async function sliceImage(options: SliceImageOptions) {
                 });
               }
 
+              // 应用编码器
+              const encoder = getEncoder(pipeline);
+
               // 编码并写入
               const tilePath = path.join(
                 absoluteOutRoot,
@@ -162,12 +198,8 @@ export async function sliceImage(options: SliceImageOptions) {
                 `${y}.${mergeOptions.tileExt}`,
               );
 
-              await pipeline
-                .png({
-                  quality: 85,
-                  compressionLevel: 9,
-                })
-                .toFile(tilePath);
+              // 写入文件
+              await encoder.toFile(tilePath);
 
               generatedTiles++;
             } catch {}

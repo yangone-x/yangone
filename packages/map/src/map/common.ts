@@ -1,5 +1,3 @@
-import type { ImageWithFilename } from './types';
-
 /**
  * 生成地图图片地址列表
  * @param low 起始索引
@@ -12,7 +10,7 @@ export function genImageUrls(
   high: number,
   url: string,
   ext: string = 'png',
-): ImageWithFilename[] {
+): [url: string, filename: string][] {
   if (low >= high) {
     throw new Error(`起始索引必须小于结束索引: low=${low}, high=${high}`);
   }

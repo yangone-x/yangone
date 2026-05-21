@@ -80,7 +80,7 @@ async function run(options: MapgenieOptions) {
       downRes = await downloadImagesCli(imageUrls, {
         basePath: mergeOptions.basePath,
         saveFilePath: mergeOptions.maps.saveFilePath,
-        download: mergeOptions.download,
+        download: mergeOptions.maps.download,
       });
     }
 

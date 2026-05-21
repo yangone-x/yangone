@@ -1,11 +1,11 @@
 // oxlint-disable no-console
-import type { SliceImageOptions } from '../map';
+import type { SliceImageOptions } from '../image';
 
 import chalk from 'chalk';
 import { merge } from 'lodash-es';
 import ProgressBar from 'progress';
 
-import { sliceImage } from '../map';
+import { sliceImage } from '../image';
 
 export async function sliceImageCli(options: SliceImageOptions) {
   console.log(chalk.bold(`\n🚀 开始生成瓦片地图...`));
@@ -30,7 +30,7 @@ export async function sliceImageCli(options: SliceImageOptions) {
       complete: '█',
       incomplete: '░',
       width: 40,
-      total: mergeOptions.maxZoom,
+      total: mergeOptions.maxZoom + 1,
       renderThrottle: 500,
     },
   );

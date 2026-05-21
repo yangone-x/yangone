@@ -1,11 +1,11 @@
 // oxlint-disable no-console
-import type { MergeImagesOptions } from '../map';
+import type { MergeImagesOptions } from '../image';
 
 import chalk from 'chalk';
 import { merge } from 'lodash-es';
 import ProgressBar from 'progress';
 
-import { mergeImages } from '../map';
+import { mergeImages } from '../image';
 
 export async function mergeImagesCli(options: MergeImagesOptions) {
   console.log(chalk.bold(`\n🚀 开始合并图片...`));

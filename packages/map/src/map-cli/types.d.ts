@@ -1,6 +1,4 @@
-import type { ExcelToPointsOptions, PointsToExcelOptions } from '../map/types';
-
-import { MergeImagesOptions, SliceImageOptions } from '../index';
+import { mapgenie, MergeImagesOptions, SliceImageOptions } from '../index';
 
 export interface GamerSkyOptions {
   /**
@@ -22,10 +20,6 @@ export interface GamerSkyOptions {
    * @default "/mapInfo.json"
    */
   dataFilePath?: string;
-  /**
-   * 下载配置
-   */
-  download?: DownloadOptions;
   /**
    * 地图图标
    */
@@ -50,6 +44,10 @@ export interface GamerSkyOptions {
      * @default "png"
      */
     downFileExt?: string;
+    /**
+     * 下载配置
+     */
+    download?: DownloadOptions;
     /**
      * 是否启用
      * @default false
@@ -138,7 +136,7 @@ export interface MapgenieOptions {
   /**
    * 点位信息转换
    */
-  excelToPoints?: ExcelToPointsOptions;
+  excelToPoints?: mapgenie.ExcelToPointsOptions;
   /**
    * 地图图片
    */
@@ -148,6 +146,10 @@ export interface MapgenieOptions {
      * @default "png"
      */
     downFileExt?: string;
+    /**
+     * 下载配置
+     */
+    download?: DownloadOptions;
     /**
      * 是否启用
      * @default false
@@ -208,7 +210,7 @@ export interface MapgenieOptions {
   /**
    * 点位信息转换
    */
-  pointsToExcel?: PointsToExcelOptions;
+  pointsToExcel?: mapgenie.PointsToExcelOptions;
 }
 
 interface DownloadOptions {
@@ -219,7 +221,7 @@ interface DownloadOptions {
   autoRename?: boolean;
   /**
    * 最大并发下载数
-   * @default 5
+   * @default 10
    */
   concurrency?: number;
   /**

@@ -42,10 +42,20 @@ export interface MergeImagesOptions {
    */
   onTick?: ({ process }: { process: number }) => void;
   /**
+   * 输出格式
+   * @default "png"
+   */
+  outputFormat?: 'jpg' | 'png' | 'webp';
+  /**
    * 输出文件路径
    * @default "./merged_image.png"
    */
   outputPath?: string;
+  /**
+   * 输出质量
+   * @default 80
+   */
+  quality?: number;
   /**
    * 行数
    * @default 64
@@ -73,6 +83,8 @@ export async function mergeImages(options: MergeImagesOptions) {
     imagePattern: '{x}_{y}.png',
     direction: 'horizontal', // 默认水平排列
     sharpPixelLimit: 1_000_000_000,
+    outputFormat: 'png',
+    quality: 80,
   };
 
   const mergeOptions = merge(defaultOptions, options);
@@ -90,8 +102,13 @@ export async function mergeImages(options: MergeImagesOptions) {
   // 存储每一行的 Buffer，最后一次性垂直拼接
   const stripBuffers: Buffer[] = [];
 
+  // 预计算每个像素的字节数 (RGBA = 4)
+  const channels = 4;
+  const stripSize = totalWidth * mergeOptions.imageHeight * channels;
+
   for (let i = 0; i < mainLoopCount; i++) {
     const composites: sharp.OverlayOptions[] = [];
+    let hasValidTile = false;
 
     for (let j = 0; j < subLoopCount; j++) {
       let x: number;
@@ -113,6 +130,7 @@ export async function mergeImages(options: MergeImagesOptions) {
       const tilePath = path.join(mergeOptions.imagesPath, tileName);
 
       try {
+        // 检查文件是否存在，存在则加入复合列表
         await fs.access(tilePath);
 
         composites.push({
@@ -120,41 +138,28 @@ export async function mergeImages(options: MergeImagesOptions) {
           left: j * mergeOptions.imageWidth,
           top: 0,
         });
+        hasValidTile = true;
       } catch {
         // 忽略缺失瓦片
       }
     }
 
-    // 生成当前条带 (Strip)
-    if (composites.length > 0) {
-      // 创建当前条带的画布
-      const stripBuffer = await sharp({
-        create: {
-          width: totalWidth,
-          height: mergeOptions.imageHeight,
-          channels: 4,
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        },
-      })
-        .composite(composites)
-        .png({ compressionLevel: 1 })
-        .toBuffer();
+    // 生成当前条带的 Raw Buffer
+    const rawBuffer: Buffer = hasValidTile
+      ? await sharp({
+          create: {
+            width: totalWidth,
+            height: mergeOptions.imageHeight,
+            channels: channels,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          },
+        })
+          .composite(composites)
+          .raw() // 输出原始像素数据
+          .toBuffer()
+      : Buffer.alloc(stripSize, 0);
 
-      stripBuffers.push(stripBuffer);
-    } else {
-      // 如果整个条带都为空，创建一个空的透明缓冲区
-      const emptyStrip = await sharp({
-        create: {
-          width: totalWidth,
-          height: mergeOptions.imageHeight,
-          channels: 4,
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        },
-      })
-        .png()
-        .toBuffer();
-      stripBuffers.push(emptyStrip);
-    }
+    stripBuffers.push(rawBuffer);
 
     // 进度回调
     if (mergeOptions?.onTick) {
@@ -174,22 +179,45 @@ export async function mergeImages(options: MergeImagesOptions) {
       input: buf,
       left: 0,
       top: index * mergeOptions.imageHeight,
+      raw: {
+        width: totalWidth,
+        height: mergeOptions.imageHeight,
+        channels: channels,
+      },
     }),
   );
 
   // 创建最终图像
-  await sharp({
+  // 基础画布也可以是 raw 的，或者直接创建
+  const finalPipeline = sharp({
     create: {
       width: totalWidth,
       height: totalHeight,
-      channels: 4,
+      channels: channels,
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     },
     limitInputPixels: mergeOptions.sharpPixelLimit,
-  })
-    .composite(finalComposites)
-    .png({ compressionLevel: 9 }) // 最终输出高压缩
-    .toFile(mergeOptions.outputPath);
+  });
+
+  // 应用所有条带
+  finalPipeline.composite(finalComposites);
+
+  // 根据格式编码输出
+  const format = mergeOptions.outputFormat.toLowerCase();
+  if (format === 'jpg' || format === 'jpeg') {
+    finalPipeline.jpeg({ quality: mergeOptions.quality, progressive: true });
+  } else if (format === 'webp') {
+    finalPipeline.webp({ quality: mergeOptions.quality, effort: 2 });
+  } else {
+    // PNG
+    finalPipeline.png({
+      quality: 100,
+      compressionLevel: 6,
+      progressive: false,
+    });
+  }
+
+  await finalPipeline.toFile(mergeOptions.outputPath);
 
   return {
     outputPath: mergeOptions.outputPath,

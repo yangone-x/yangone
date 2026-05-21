@@ -1,7 +1,10 @@
 // oxlint-disable no-console
 // oxlint-disable unicorn/no-process-exit
-import type { DownloadImagesOptions, DownloadResult } from '../map';
-import type { ImageData } from '../map/types';
+import type {
+  DownloadImagesOptions,
+  DownloadResult,
+  ImageData,
+} from '../image';
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,8 +15,8 @@ import chalk from 'chalk';
 import { merge } from 'lodash-es';
 import ProgressBar from 'progress';
 
+import { downloadImages } from '../image';
 import logger from '../logger';
-import { downloadImages } from '../map';
 
 interface Options {
   basePath?: string;

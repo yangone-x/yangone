@@ -1,5 +1,3 @@
-import type { ImageData, ImageUrl, ImageWithFilename } from './types';
-
 import fs from 'node:fs';
 import https from 'node:https';
 import path from 'node:path';
@@ -7,6 +5,11 @@ import { URL } from 'node:url';
 
 import { merge } from 'lodash-es';
 import fetch from 'node-fetch';
+
+export type ImageUrl = string;
+export type ImageWithFilename = [url: string, filename: string];
+
+export type ImageData = ImageUrl[] | ImageWithFilename[];
 
 export interface DownloadImagesOptions {
   /**
@@ -16,7 +19,7 @@ export interface DownloadImagesOptions {
   autoRename?: boolean;
   /**
    * 最大并发下载数
-   * @default 5
+   * @default 10
    */
   concurrency?: number;
   onTick?: ({ url, filename }: { filename: string; url: string }) => void;
@@ -66,14 +69,14 @@ export async function downloadImages(
   // 默认配置项
   const defaultOptions = {
     autoRename: false,
-    concurrency: 5,
+    concurrency: 10,
     timeout: 30_000, // 30秒超时
   };
   const mergeOptions = merge(defaultOptions, options);
 
   const keepAliveAgent = new https.Agent({
     keepAlive: true,
-    maxSockets: mergeOptions.concurrency * 2,
+    maxSockets: mergeOptions.concurrency + 5,
   });
 
   let successCount = 0;

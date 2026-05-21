@@ -65,7 +65,7 @@ async function run(options: GamerSkyOptions) {
       await downloadImagesCli(iconUrls, {
         basePath: mergeOptions.basePath,
         saveFilePath: mergeOptions.icons.saveFilePath,
-        download: mergeOptions.download,
+        download: mergeOptions?.maps?.download,
       });
     }
 
@@ -86,7 +86,7 @@ async function run(options: GamerSkyOptions) {
       downRes = await downloadImagesCli(imageUrls, {
         basePath: mergeOptions.basePath,
         saveFilePath: mergeOptions.maps.saveFilePath,
-        download: mergeOptions.download,
+        download: mergeOptions?.maps?.download,
       });
     }
 
