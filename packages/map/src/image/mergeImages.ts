@@ -42,11 +42,6 @@ export interface MergeImagesOptions {
    */
   onTick?: ({ process }: { process: number }) => void;
   /**
-   * 输出格式
-   * @default "png"
-   */
-  outputFormat?: 'jpg' | 'png' | 'webp';
-  /**
    * 输出文件路径
    * @default "./merged_image.png"
    */
@@ -83,7 +78,6 @@ export async function mergeImages(options: MergeImagesOptions) {
     imagePattern: '{x}_{y}.png',
     direction: 'horizontal', // 默认水平排列
     sharpPixelLimit: 1_000_000_000,
-    outputFormat: 'png',
     quality: 80,
   };
 
@@ -203,7 +197,7 @@ export async function mergeImages(options: MergeImagesOptions) {
   finalPipeline.composite(finalComposites);
 
   // 根据格式编码输出
-  const format = mergeOptions.outputFormat.toLowerCase();
+  const format = mergeOptions.outputPath.split('.').pop()?.toLowerCase();
   if (format === 'jpg' || format === 'jpeg') {
     finalPipeline.jpeg({ quality: mergeOptions.quality, progressive: true });
   } else if (format === 'webp') {

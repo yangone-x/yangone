@@ -30,7 +30,7 @@ async function run(options: GamerSkyOptions) {
       },
       mergeImages: {
         imagesPath: '/images',
-        outputPath: '/merged_image.jpg',
+        outputPath: '/merged_image.png',
         direction: 'horizontal',
         cols: 64,
         rows: 64,
@@ -39,7 +39,7 @@ async function run(options: GamerSkyOptions) {
         imagePattern: '{x}_{y}.png',
       },
       createTiles: {
-        imagePath: '/merged_image.jpg',
+        imagePath: '/merged_image.png',
         outputPath: '/maps',
         tileSize: 256,
       },

@@ -27,14 +27,14 @@ async function run(options: MapgenieOptions) {
       },
       mergeImages: {
         imagesPath: '/images',
-        outputPath: '/merged_image.jpg',
+        outputPath: '/merged_image.png',
         direction: 'horizontal',
         imagesPerRow: 64,
         imageWidth: 256,
         imageHeight: 256,
       },
       createTiles: {
-        imagePath: '/merged_image.jpg',
+        imagePath: '/merged_image.png',
         outputPath: '/maps',
         tileSize: 256,
       },

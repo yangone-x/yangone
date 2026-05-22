@@ -5,6 +5,7 @@ import { URL } from 'node:url';
 
 import { merge } from 'lodash-es';
 import fetch from 'node-fetch';
+import pLimit from 'p-limit';
 
 export type ImageUrl = string;
 export type ImageWithFilename = [url: string, filename: string];
@@ -83,32 +84,17 @@ export async function downloadImages(
   let failCount = 0;
   const failFiles: [string, string][] = [];
 
+  // 创建并发限制器
+  const limit = pLimit(mergeOptions.concurrency);
+
   try {
-    // 任务队列
-    const taskQueue: Array<
-      [index: number, item: ImageUrl | ImageWithFilename]
-    > = imageData
-      .map((item, index): [number, ImageUrl | ImageWithFilename] => [
-        index,
-        item,
-      ])
-      .toReversed();
-
-    let activeWorkers = 0;
-
-    // 单个下载任务处理函数
-    const processDownloadTask = async () => {
-      while (taskQueue.length > 0) {
-        const currentTask = taskQueue.pop();
-        if (!currentTask) continue;
-
-        const [index, item] = currentTask;
+    // 映射所有下载任务
+    const tasks = imageData.map((item, index) => {
+      return limit(async () => {
         let url: string = '';
         let filename: null | string = null;
 
         try {
-          activeWorkers++;
-
           // 解析下载项
           if (Array.isArray(item) && item.length === 2) {
             [url, filename] = item;
@@ -187,40 +173,34 @@ export async function downloadImages(
           const errorMsg =
             error instanceof Error ? error.message : String(error);
           failCount++;
-          failFiles.push([url, filename || path.basename(url)]);
+          // 确保即使出错也能记录文件名，如果之前没生成则尝试从URL获取
+          const finalFilename =
+            filename || (url ? path.basename(url) : `unknown_${index}`);
+          failFiles.push([url, finalFilename]);
 
           if (typeof mergeOptions.onTickError === 'function') {
             mergeOptions.onTickError({
               url,
-              filename: filename || path.basename(url),
+              filename: finalFilename,
               error: errorMsg,
             });
           }
         } finally {
           if (typeof mergeOptions.onTick === 'function') {
+            // 确保回调中使用的文件名是最终确定的
+            const finalFilename =
+              filename || (url ? path.basename(url) : `unknown_${index}`);
             mergeOptions.onTick({
               url,
-              filename: filename || path.basename(url),
+              filename: finalFilename,
             });
           }
-          activeWorkers--;
         }
-      }
-    };
-
-    // 启动工作线程池
-    const workerCount = Math.min(mergeOptions.concurrency, imageData.length);
-    const workers = Array.from({ length: workerCount }, () =>
-      processDownloadTask(),
-    );
+      });
+    });
 
     // 等待所有任务完成
-    await Promise.all(workers);
-
-    // 确保所有工作线程都已结束
-    if (activeWorkers > 0) {
-      await new Promise((resolve) => setTimeout(resolve, 100 * activeWorkers));
-    }
+    await Promise.all(tasks);
   } finally {
     keepAliveAgent.destroy();
   }

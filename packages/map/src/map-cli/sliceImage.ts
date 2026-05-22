@@ -23,22 +23,30 @@ export async function sliceImageCli(options: SliceImageOptions) {
   // 进度条
   let progressBar: null | ProgressBar = null;
 
+  // 计算总进度
+  // 累加 从  2的0次方到 2的maxZoom次方
+  const total = Array.from({ length: mergeOptions.maxZoom + 1 })
+    .map((_, i) => 2 ** i)
+    .reduce((acc, cur) => acc + cur * cur, 0);
+
   // 初始化进度条
   progressBar = new ProgressBar(
-    chalk.cyan('[:bar] :percent :etas :current/:total'),
+    chalk.cyan('[:bar] :percent :etas :current/:total :file'),
     {
       complete: '█',
       incomplete: '░',
       width: 40,
-      total: mergeOptions.maxZoom + 1,
+      total: total,
       renderThrottle: 500,
     },
   );
 
   const createRes = await sliceImage({
     ...mergeOptions,
-    onTick: () => {
-      progressBar?.tick();
+    onTick: ({ x, y, z }) => {
+      progressBar?.tick({
+        file: `${z}:${x}_${y}`,
+      });
     },
   });
 

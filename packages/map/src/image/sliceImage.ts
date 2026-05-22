@@ -1,6 +1,5 @@
 import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 
 // oxlint-disable no-console
@@ -10,8 +9,8 @@ import sharp from 'sharp';
 
 export interface SliceImageOptions {
   /**
-   * 最大并发下载数
-   * @default os.availableParallelism()
+   * 最大并发
+   * @default 10
    */
   concurrency?: number;
   /**
@@ -26,7 +25,7 @@ export interface SliceImageOptions {
   /**
    * 进度回调
    */
-  onTick?: ({ zoom }: { zoom: number }) => void;
+  onTick?: ({ z, x, y }: { x: number; y: number; z: number }) => void;
   /**
    * 瓦片保存路径
    * @default '/maps'
@@ -64,18 +63,13 @@ export async function sliceImage(options: SliceImageOptions) {
     outputPath: '/maps',
     tileSize: 256,
     maxZoom: 6,
-    concurrency: os.availableParallelism(),
+    concurrency: 10,
     tileExt: 'png',
     sharpPixelLimit: 1_000_000_000,
     quality: 80,
   };
 
   const mergeOptions = merge(defaultOptions, options);
-
-  const DEFAULT_CONCURRENCY = Math.max(
-    mergeOptions.concurrency,
-    os.availableParallelism(),
-  );
 
   if (!fsSync.existsSync(mergeOptions.imagePath)) {
     throw new Error(`原图不存在：${mergeOptions.imagePath}`);
@@ -92,8 +86,9 @@ export async function sliceImage(options: SliceImageOptions) {
   const originH = meta.height; // 原图高度
 
   let generatedTiles = 0;
+
   // 提高并发数以充分利用 CPU，因为 Sharp 内部有线程池
-  const limit = pLimit(DEFAULT_CONCURRENCY);
+  const limit = pLimit(mergeOptions.concurrency);
   const absoluteOutRoot = path.resolve(mergeOptions.outputPath);
 
   // 预创建根目录
@@ -113,10 +108,9 @@ export async function sliceImage(options: SliceImageOptions) {
         return pipeline.webp({ quality, effort: 2 });
       } // effort 2 是速度与压缩率的平衡
       default: {
-        // PNG 压缩等级 9 非常慢，建议降至 6 或 4
         return pipeline.png({
           quality: 100, // PNG 是无损的，quality 参数在某些版本无效，主要靠 compressionLevel
-          compressionLevel: 6,
+          compressionLevel: 4,
           progressive: false,
         });
       }
@@ -144,7 +138,6 @@ export async function sliceImage(options: SliceImageOptions) {
     const tasks = [];
 
     // 预先为该 Z 层级创建所有 X 目录
-    // 这样可以避免在每个瓦片任务中竞争性地创建目录
     const zDirRoot = path.join(absoluteOutRoot, String(z));
     await fs.mkdir(zDirRoot, { recursive: true });
 
@@ -202,6 +195,10 @@ export async function sliceImage(options: SliceImageOptions) {
               await encoder.toFile(tilePath);
 
               generatedTiles++;
+
+              if (mergeOptions?.onTick) {
+                mergeOptions.onTick({ z, x, y });
+              }
             } catch {}
           }),
         );
@@ -209,10 +206,6 @@ export async function sliceImage(options: SliceImageOptions) {
     }
 
     await Promise.all(tasks);
-
-    if (mergeOptions?.onTick) {
-      mergeOptions.onTick({ zoom: z });
-    }
   }
 
   return {
