@@ -24,12 +24,12 @@ export async function perfectionist(): Promise<Linter.Config[]> {
             customGroups: [
               {
                 selector: 'type',
-                groupName: 'fx-core-type',
+                groupName: 'yangone-core-type',
                 elementNamePattern: '^@yangone-core/.+',
               },
               {
                 selector: 'type',
-                groupName: 'fx-type',
+                groupName: 'yangone-type',
                 elementNamePattern: '^@yangone/.+',
               },
               {
@@ -38,11 +38,11 @@ export async function perfectionist(): Promise<Linter.Config[]> {
                 elementNamePattern: ['^vue$', '^vue-.+', '^@vue/.+'],
               },
               {
-                groupName: 'fx',
+                groupName: 'yangone',
                 elementNamePattern: '^@yangone/.+',
               },
               {
-                groupName: 'fx-core',
+                groupName: 'yangone-core',
                 elementNamePattern: '^@yangone-core/.+',
               },
               {
@@ -54,14 +54,14 @@ export async function perfectionist(): Promise<Linter.Config[]> {
             groups: [
               ['type-external', 'type-builtin', 'type-import'],
               'vue-type',
-              'fx-type',
-              'fx-core-type',
+              'yangone-type',
+              'yangone-core-type',
               ['type-parent', 'type-sibling', 'type-index'],
               ['type-internal'],
               'value-builtin',
               'vue',
-              'fx',
-              'fx-core',
+              'yangone',
+              'yangone-core',
               'value-external',
               'value-internal',
               ['value-parent', 'value-sibling', 'value-index'],

@@ -1,15 +1,15 @@
-// oxlint-disable no-console
-
 import type { MapgenieOptions } from './types';
 
 import path from 'node:path';
 
+import { intro, log, outro } from '@clack/prompts';
 import chalk from 'chalk';
 import { merge } from 'lodash-es';
 
 import { readJSON } from '../fs';
+import logger from '../logger';
 import { genImageUrls, mapgenie } from '../map';
-import { downloadImagesCli } from './fetchImage';
+import { fetchImagesCli } from './fetchImage';
 import { mergeImagesCli } from './mergeImages';
 import { sliceImageCli } from './sliceImage';
 
@@ -19,7 +19,7 @@ async function run(options: MapgenieOptions) {
       basePath: '/',
       dataFilePath: '/mapInfo.json',
       maps: {
-        saveFilePath: '/images',
+        outputPath: '/images',
         low: 8128,
         high: 8192,
         url: '',
@@ -56,6 +56,8 @@ async function run(options: MapgenieOptions) {
     };
     // 合并配置项
     const mergeOptions = merge(defaultOptions, options);
+    // 设置日志生成路径
+    logger.setLogDir(mergeOptions.basePath);
     //
     function getPathWithBase(url: string = '') {
       return path.join(mergeOptions.basePath, url);
@@ -69,25 +71,23 @@ async function run(options: MapgenieOptions) {
       if (!mergeOptions.maps.url) {
         throw new Error('地图图片地址不存在');
       }
-      console.log(chalk.bold(`\n🚀 开始获取地图图片地址...`));
+      intro(chalk.bold(`🚀 开始获取地图图片地址...`));
       const imageUrls = await genImageUrls(
         mergeOptions.maps.low,
         mergeOptions.maps.high,
         mergeOptions.maps.url,
         mergeOptions.maps.downFileExt,
       );
-      console.log(chalk.bold(`🚀 开始下载地图图片...`));
-      downRes = await downloadImagesCli(imageUrls, {
-        basePath: mergeOptions.basePath,
-        saveFilePath: mergeOptions.maps.saveFilePath,
-        download: mergeOptions.maps.download,
+      downRes = await fetchImagesCli({
+        ...mergeOptions.maps.download,
+        images: imageUrls,
+        outputPath: getPathWithBase(mergeOptions.maps.outputPath),
       });
+      outro(chalk(`📂 文件保存位置: ${mergeOptions.maps.outputPath}`));
     }
 
     if (downRes?.failCount > 0) {
-      console.log(
-        chalk.yellow(`⚠ 注意: 地图图片有错误下载，请手动完善后再合并`),
-      );
+      log.warn(chalk.yellow(`⚠ 注意: 地图图片有错误下载，请手动完善后再合并`));
     } else {
       if (options?.mergeImages && options.mergeImages?.enabled !== false) {
         await mergeImagesCli({
@@ -107,28 +107,28 @@ async function run(options: MapgenieOptions) {
     }
 
     if (options?.points && options.points?.enabled !== false) {
-      console.log(chalk.bold(`\n🚀 开始生成地标数据文件...`));
+      intro(chalk.bold(`🚀 开始生成地标数据文件...`));
       const res = await mapgenie.genPoints({
         ...mergeOptions.points,
         gameUrl: path.basename(mergeOptions.basePath),
         mapInfo,
         outputPath: getPathWithBase(mergeOptions.points.outputPath),
       });
-      console.log(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
+      outro(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
     }
 
     if (options.pointsToExcel && options.pointsToExcel?.enabled !== false) {
-      console.log(chalk.bold(`\n🚀 开始根据地标生成地标数据表格文件...`));
+      intro(chalk.bold(`🚀 开始根据地标生成地标数据表格文件...`));
       const exRes = await mapgenie.writePointExcel({
         ...mergeOptions.pointsToExcel,
         inputPath: getPathWithBase(mergeOptions.pointsToExcel.inputPath),
         outputPath: getPathWithBase(mergeOptions.pointsToExcel.outputPath),
       });
-      console.log(chalk(`📂 文件保存位置: ${path.resolve(exRes.outputPath)}`));
+      outro(chalk(`📂 文件保存位置: ${path.resolve(exRes.outputPath)}`));
     }
 
     if (options?.excelToPoints && options.excelToPoints?.enabled !== false) {
-      console.log(chalk.bold(`\n🚀 开始根据数据表格文件生成地标数据...`));
+      intro(chalk.bold(`🚀 开始根据数据表格文件生成地标数据...`));
       const exRes = await mapgenie.readPointExcel({
         ...mergeOptions.excelToPoints,
         inputPath: getPathWithBase(mergeOptions.excelToPoints.inputPath),
@@ -137,10 +137,10 @@ async function run(options: MapgenieOptions) {
         ),
         outputPath: getPathWithBase(mergeOptions.excelToPoints.outputPath),
       });
-      console.log(chalk(`📂 文件保存位置: ${path.resolve(exRes.outputPath)}`));
+      outro(chalk(`📂 文件保存位置: ${path.resolve(exRes.outputPath)}`));
     }
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    log.error(error.message);
   }
 }
 

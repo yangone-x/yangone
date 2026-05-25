@@ -11,7 +11,7 @@ try {
     .command('[script]')
     .usage(`Run turbo interactively.`)
     .action(async (command: string) => {
-      await run({ command });
+      run({ command });
     });
 
   turboRun.usage('turbo-run');

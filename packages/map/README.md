@@ -2,7 +2,7 @@
 
 本模块提供了一套高效的图片处理工具，主要包含以下三个核心功能：
 
-1. **批量下载图片** (downloadImages)：支持并发下载、自动重命名及超时控制。
+1. **批量下载图片** (fetchImages)：支持并发下载、自动重命名及超时控制。
 2. **图片切片/瓦片化** (sliceImage)：将大图切割成 XYZ 标准的地图瓦片序列。
 3. **图片合并/拼接** (mergeImages)：将分散的瓦片或图片网格重新合并为一张大图。
 
@@ -14,20 +14,20 @@ pnpm install @yangone/climb-map
 
 ## API 参考
 
-### 1. 批量下载图片 (downloadImages)
+### 1. 批量下载图片 (fetchImages)
 
 从远程 URL 批量下载图片到本地文件夹。
 
 #### 导入
 
 ```typescript
-import { downloadImages } from '@yangone/climb-map';
+import { fetchImages } from '@yangone/climb-map';
 ```
 
 #### 用法示例
 
 ```typescript
-import { downloadImages } from '@yangone/climb-map';
+import { fetchImages } from '@yangone/climb-map';
 
 async function main() {
   const urls = [
@@ -35,9 +35,10 @@ async function main() {
     ['https://example.com/image2.jpg', 'custom_name.jpg'], // 指定文件名
   ];
 
-  const result = await downloadImages(urls, './downloads', {
+  const result = await fetchImages({
+    images: urls,
+    outputPath: './output',
     concurrency: 5,
-    autoRename: true, // 如果文件存在则自动重命名
     timeout: 10000,
     onTick: ({ url, filename }) => {
       console.log(`Downloaded: ${filename}`);
@@ -55,9 +56,8 @@ async function main() {
 
 | 参数 | 类型 | 默认值 | 描述 |
 | :-- | :-- | :-- | :-- |
-| `imageData` | `string[]` \| `[string, string][]` | - | 图片 URL 数组，或 `[URL, 文件名]` 元组数组 |
-| `saveFolder` | `string` | `/images` | 保存文件夹路径 |
-| `options.autoRename` | `boolean` | `false` | 是否自动处理文件名冲突 |
+| `options.images` | `string[]` \| `[string, string][]` | - | 图片 URL 数组，或 `[URL, 文件名]` 元组数组 |
+| `options.outputPath` | `string` | `/images` | 保存文件夹路径 |
 | `options.concurrency` | `number` | `10` | 最大并发下载数 |
 | `options.timeout` | `number` | `30000` | 单个请求超时时间 (ms) |
 | `options.onTick` | `function` | - | 每个文件处理完成后的回调 |
@@ -186,8 +186,8 @@ async function main() {
 ## 注意事项
 
 1. **内存管理**: [mergeImages] 和 [sliceImage] 使用 `sharp` 进行图像处理。对于超大图片，请适当调整 [sharpPixelLimit] 并确保服务器有足够的内存。
-2. **并发控制**: [downloadImages] 和 [sliceImage] 均支持并发配置。建议根据网络状况或 CPU 核心数调整 [concurrency] 以获得最佳性能。
+2. **并发控制**: [fetchImages] 和 [sliceImage] 均支持并发配置。建议根据网络状况或 CPU 核心数调整 [concurrency] 以获得最佳性能。
 3. **文件格式**:
    - [sliceImage] 支持 PNG, JPEG, WebP。
    - [mergeImages] 支持输出为 PNG, JPEG, WebP。
-4. **错误处理**: [downloadImages] 不会因单个文件失败而中断整个流程，失败信息会通过 [onTickError] 回调或返回结果中的 [failFiles] 提供。
+4. **错误处理**: [fetchImages] 不会因单个文件失败而中断整个流程，失败信息会通过 [onTickError] 回调或返回结果中的 [failFiles] 提供。

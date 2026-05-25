@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import fsSync from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -6,7 +7,6 @@ import path from 'node:path';
 import { merge } from 'lodash-es';
 import pLimit from 'p-limit';
 import sharp from 'sharp';
-
 export interface SliceImageOptions {
   /**
    * 最大并发
@@ -71,6 +71,9 @@ export async function sliceImage(options: SliceImageOptions) {
 
   const mergeOptions = merge(defaultOptions, options);
 
+  // 设置 sharp 全局并发，避免内部线程池过大
+  sharp.concurrency(1);
+
   if (!fsSync.existsSync(mergeOptions.imagePath)) {
     throw new Error(`原图不存在：${mergeOptions.imagePath}`);
   }
@@ -90,31 +93,40 @@ export async function sliceImage(options: SliceImageOptions) {
   // 提高并发数以充分利用 CPU，因为 Sharp 内部有线程池
   const limit = pLimit(mergeOptions.concurrency);
   const absoluteOutRoot = path.resolve(mergeOptions.outputPath);
-
   // 预创建根目录
   await fs.mkdir(absoluteOutRoot, { recursive: true });
 
-  // 根据格式确定编码器配置
-  const getEncoder = (pipeline: sharp.Sharp) => {
+  // 预定义编码器函数
+  const encodeTile = async (
+    buffer: Buffer,
+    width: number,
+    height: number,
+    tilePath: string,
+  ) => {
     const ext = mergeOptions.tileExt.toLowerCase();
     const quality = mergeOptions.quality;
 
-    switch (ext) {
-      case 'jpeg':
-      case 'jpg': {
-        return pipeline.jpeg({ quality, progressive: true });
-      }
-      case 'webp': {
-        return pipeline.webp({ quality, effort: 2 });
-      } // effort 2 是速度与压缩率的平衡
-      default: {
-        return pipeline.png({
-          quality: 100, // PNG 是无损的，quality 参数在某些版本无效，主要靠 compressionLevel
-          compressionLevel: 4,
-          progressive: false,
-        });
-      }
+    let pipeline = sharp(buffer, {
+      raw: {
+        width,
+        height,
+        channels: meta.channels || 3,
+      },
+    });
+
+    if (ext === 'jpeg' || ext === 'jpg') {
+      pipeline = pipeline.jpeg({ quality, progressive: true });
+    } else if (ext === 'webp') {
+      pipeline = pipeline.webp({ quality, effort: 1 }); // effort 1 更快
+    } else {
+      // PNG: 降低压缩等级以换取速度
+      pipeline = pipeline.png({
+        compressionLevel: 1,
+        adaptiveFiltering: false,
+      });
     }
+
+    return pipeline.toFile(tilePath);
   };
 
   for (let z = 0; z <= mergeOptions.maxZoom; z++) {
@@ -124,16 +136,22 @@ export async function sliceImage(options: SliceImageOptions) {
 
     if (currW < 1 || currH < 1) continue;
 
-    // 为当前层级创建一个基础的 resized 实例
-    const scaledImage = sharp(mergeOptions.imagePath, {
+    // 一次性将整个层级缩放并转为 raw buffer
+    // 避免后续每个瓦片都去操作 sharp 实例
+    const scaledBuffer = await sharp(mergeOptions.imagePath, {
       limitInputPixels: mergeOptions.sharpPixelLimit,
-    }).resize(currW, currH, {
-      fit: 'fill',
-      kernel: sharp.kernel.lanczos3, // Lanczos 质量好但稍慢，如需极速可改为 'nearest' 或 'biliner'
-    });
+    })
+      .resize(currW, currH, {
+        fit: 'fill',
+        kernel: sharp.kernel.lanczos3,
+      })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
 
     const cols = Math.ceil(currW / mergeOptions.tileSize);
     const rows = Math.ceil(currH / mergeOptions.tileSize);
+    const channels = meta.channels || 3;
+    const tileSize = mergeOptions.tileSize;
 
     const tasks = [];
 
@@ -160,30 +178,61 @@ export async function sliceImage(options: SliceImageOptions) {
         tasks.push(
           limit(async () => {
             try {
-              // 构建管道
-              // 使用 clone() 确保每个任务独立
-              let pipeline = scaledImage.clone().extract({
-                left,
-                top,
-                width: w,
-                height: h,
-              });
+              // 从 raw buffer 中提取像素数据
+              // raw buffer 是一维数组: [R,G,B, R,G,B, ...]
+              // 需要计算偏移量
+              const tileBuffer = Buffer.alloc(w * h * channels);
 
-              // 处理边缘填充
-              if (w < mergeOptions.tileSize || h < mergeOptions.tileSize) {
-                pipeline = pipeline.extend({
-                  top: 0,
-                  bottom: mergeOptions.tileSize - h,
-                  left: 0,
-                  right: mergeOptions.tileSize - w,
-                  background: { r: 255, g: 255, b: 255, alpha: 1 },
-                });
+              for (let row = 0; row < h; row++) {
+                const srcY = top + row;
+                const srcOffset = (srcY * currW + left) * channels;
+                const destOffset = row * w * channels;
+                const length = w * channels;
+
+                // 内存拷贝
+                scaledBuffer.data.copy(
+                  tileBuffer,
+                  destOffset,
+                  srcOffset,
+                  srcOffset + length,
+                );
               }
 
-              // 应用编码器
-              const encoder = getEncoder(pipeline);
+              // 需要填充边缘（当 w 或 h 小于 tileSize 时）
+              let finalBuffer = tileBuffer;
+              let finalW = w;
+              let finalH = h;
 
-              // 编码并写入
+              if (w < tileSize || h < tileSize) {
+                finalW = tileSize;
+                finalH = tileSize;
+                finalBuffer = Buffer.alloc(tileSize * tileSize * channels);
+                // 填充白色背景 (假设 RGB)
+                if (channels === 3) {
+                  finalBuffer.fill(255);
+                } else if (channels === 4) {
+                  // RGBA 填充白色不透明
+                  for (let i = 0; i < finalBuffer.length; i += 4) {
+                    finalBuffer[i] = 255;
+                    finalBuffer[i + 1] = 255;
+                    finalBuffer[i + 2] = 255;
+                    finalBuffer[i + 3] = 255;
+                  }
+                }
+
+                // 将实际图像数据拷贝到左上角
+                for (let row = 0; row < h; row++) {
+                  const srcOffset = row * w * channels;
+                  const destOffset = row * tileSize * channels;
+                  tileBuffer.copy(
+                    finalBuffer,
+                    destOffset,
+                    srcOffset,
+                    srcOffset + w * channels,
+                  );
+                }
+              }
+
               const tilePath = path.join(
                 absoluteOutRoot,
                 String(z),
@@ -191,9 +240,7 @@ export async function sliceImage(options: SliceImageOptions) {
                 `${y}.${mergeOptions.tileExt}`,
               );
 
-              // 写入文件
-              await encoder.toFile(tilePath);
-
+              await encodeTile(finalBuffer, finalW, finalH, tilePath);
               generatedTiles++;
 
               if (mergeOptions?.onTick) {

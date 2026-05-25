@@ -1,4 +1,5 @@
-import fs from 'node:fs';
+import fsSync from 'node:fs';
+import fs from 'node:fs/promises';
 import https from 'node:https';
 import path from 'node:path';
 import { URL } from 'node:url';
@@ -12,18 +13,23 @@ export type ImageWithFilename = [url: string, filename: string];
 
 export type ImageData = ImageUrl[] | ImageWithFilename[];
 
-export interface DownloadImagesOptions {
-  /**
-   * 自动重命名
-   * @default false
-   */
-  autoRename?: boolean;
+export interface FetchImagesOptions {
   /**
    * 最大并发下载数
    * @default 10
    */
   concurrency?: number;
+  /**
+   * 下载图片数据
+   */
+  images: ImageData;
+  /**
+   * 进度回调
+   */
   onTick?: ({ url, filename }: { filename: string; url: string }) => void;
+  /**
+   * 失败进度回调
+   */
   onTickError?: ({
     url,
     filename,
@@ -34,13 +40,18 @@ export interface DownloadImagesOptions {
     url: string;
   }) => void;
   /**
+   * 瓦片保存路径
+   * @default '/images'
+   */
+  outputPath?: string;
+  /**
    * 超时
    * @default 30000
    */
   timeout?: number;
 }
 
-export interface DownloadResult {
+export interface FetchImagesResult {
   /**
    * 失败数量
    */
@@ -58,20 +69,18 @@ export interface DownloadResult {
 /**
  * 批量下载图片到本地
  * @param imageData 图片数据，可以是URL数组或[URL, 文件名]元组数组
- * @param saveFolder 保存文件夹路径
  * @param options 下载选项配置
  * @returns 下载结果统计
  */
-export async function downloadImages(
-  imageData: ImageData,
-  saveFolder = '/images',
-  options: DownloadImagesOptions = {},
-): Promise<DownloadResult> {
+export async function fetchImages(
+  options: FetchImagesOptions,
+): Promise<FetchImagesResult> {
   // 默认配置项
   const defaultOptions = {
     autoRename: false,
     concurrency: 10,
     timeout: 30_000, // 30秒超时
+    outputPath: '/images',
   };
   const mergeOptions = merge(defaultOptions, options);
 
@@ -86,10 +95,13 @@ export async function downloadImages(
 
   // 创建并发限制器
   const limit = pLimit(mergeOptions.concurrency);
+  const absoluteOutRoot = path.resolve(mergeOptions.outputPath);
+  // 预创建根目录
+  await fs.mkdir(absoluteOutRoot, { recursive: true });
 
   try {
     // 映射所有下载任务
-    const tasks = imageData.map((item, index) => {
+    const tasks = mergeOptions.images.map((item, index) => {
       return limit(async () => {
         let url: string = '';
         let filename: null | string = null;
@@ -140,12 +152,6 @@ export async function downloadImages(
             clearTimeout(headTimeout);
           }
 
-          // 处理文件名冲突
-          let savePath = path.join(saveFolder, filename);
-          if (mergeOptions.autoRename) {
-            savePath = resolveDuplicateFilename(saveFolder, filename);
-          }
-
           // 下载文件内容
           const downloadController = new AbortController();
           const downloadTimeout = setTimeout(
@@ -162,7 +168,8 @@ export async function downloadImages(
             if (!fullResponse.ok) {
               throw new Error(`下载失败: HTTP ${fullResponse.status}`);
             }
-
+            // 图片保存路径
+            const savePath = path.join(mergeOptions.outputPath, filename);
             // 流式写入文件
             await streamToFile(fullResponse.body, savePath);
             successCount++;
@@ -235,30 +242,6 @@ function generateFilename(
 }
 
 /**
- * 处理文件名重复
- * @param folder 文件夹
- * @param filename 原始文件名
- * @returns 不重复的文件名路径
- */
-function resolveDuplicateFilename(folder: string, filename: string): string {
-  let savePath = path.join(folder, filename);
-  if (!fs.existsSync(savePath)) {
-    return savePath;
-  }
-
-  const ext = path.extname(filename);
-  const base = path.basename(filename, ext);
-  let counter = 1;
-
-  while (fs.existsSync(savePath)) {
-    savePath = path.join(folder, `${base}_${counter}${ext}`);
-    counter++;
-  }
-
-  return savePath;
-}
-
-/**
  * 将流写入文件
  * @param readableStream 可读流
  * @param filePath 文件路径
@@ -274,7 +257,7 @@ function streamToFile(
       return;
     }
 
-    const writer = fs.createWriteStream(filePath);
+    const writer = fsSync.createWriteStream(filePath);
 
     readableStream.pipe(writer).on('error', reject).on('finish', resolve);
   });

@@ -1,6 +1,6 @@
 # @yangone/vsh
 
-一个 Shell 脚本工具集合，用于 Vue Fx Admin 项目的开发和管理。
+一个 Shell 脚本工具集合，用于 Vue Yangone Admin 项目的开发和管理。
 
 ## 功能特性
 

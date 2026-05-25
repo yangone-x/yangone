@@ -8,14 +8,4 @@ export default defineConfig({
   outExtensions: () => ({
     dts: '.d.ts',
   }),
-  // 排除外部依赖
-  // externals: [
-  //   'chalk',
-  //   '@clack/prompts',
-  //   'decimal.js',
-  //   'exceljs',
-  //   'lodash.merge',
-  //   'node-fetch',
-  //   'progress',
-  // ],
 });

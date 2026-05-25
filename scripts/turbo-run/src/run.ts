@@ -46,7 +46,7 @@ export async function run(options: RunOptions) {
     process.exit(1);
   }
 
-  await execaCommand(`pnpm --filter=${selectPkg} run ${command}`, {
+  execaCommand(`pnpm --filter=${selectPkg} run ${command}`, {
     stdio: 'inherit',
   });
 }

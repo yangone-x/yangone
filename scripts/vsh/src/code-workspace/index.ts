@@ -13,7 +13,7 @@ import {
   toPosixPath,
 } from '@yangone/node-utils';
 
-const CODE_WORKSPACE_FILE = join('yangone.code-workspace');
+const CODE_WORKSPACE_FILE = join('yangone-admin.code-workspace');
 
 interface CodeWorkspaceCommandOptions {
   autoCommit?: boolean;

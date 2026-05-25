@@ -1,6 +1,6 @@
 {
   "name": "@yangone/climb-map",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "https://github.com/yangone-x/yangone",
   "bugs": "https://github.com/yangone-x/yangone/issues",
   "repository": "packages/climb-map",
@@ -50,11 +50,9 @@
     "lodash-es": "catalog:",
     "node-fetch": "catalog:",
     "p-limit": "catalog:",
-    "progress": "catalog:",
     "sharp": "catalog:"
   },
   "devDependencies": {
-    "@types/lodash-es": "catalog:",
-    "@types/progress": "catalog:"
+    "@types/lodash-es": "catalog:"
   }
 }

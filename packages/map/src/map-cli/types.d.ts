@@ -1,3 +1,5 @@
+import type { FetchImagesOptions } from '../index';
+
 import { mapgenie, MergeImagesOptions, SliceImageOptions } from '../index';
 
 export interface GamerSkyOptions {
@@ -33,7 +35,7 @@ export interface GamerSkyOptions {
      * 图标文件保存路径
      * @default "/icons"
      */
-    saveFilePath?: string;
+    outputPath?: string;
   };
   /**
    * 地图图片
@@ -47,7 +49,7 @@ export interface GamerSkyOptions {
     /**
      * 下载配置
      */
-    download?: DownloadOptions;
+    download?: FetchImagesOptions;
     /**
      * 是否启用
      * @default false
@@ -67,7 +69,7 @@ export interface GamerSkyOptions {
      * 图标文件保存路径
      * @default "/images"
      */
-    saveFilePath?: string;
+    outputPath?: string;
     /**
      * 地图图片地址
      * @example https://xxxxxx/{x}_{y}.png
@@ -132,7 +134,7 @@ export interface MapgenieOptions {
    */
   dataFilePath?: string;
   // 下载配置
-  download?: DownloadOptions;
+  download?: FetchImagesOptions;
   /**
    * 点位信息转换
    */
@@ -169,7 +171,7 @@ export interface MapgenieOptions {
      * 图标文件保存路径
      * @default "/images"
      */
-    saveFilePath?: string;
+    outputPath?: string;
     /**
      * 地图图片地址
      * @example https://xxxxxx/{x}_{y}.png
@@ -211,22 +213,4 @@ export interface MapgenieOptions {
    * 点位信息转换
    */
   pointsToExcel?: mapgenie.PointsToExcelOptions;
-}
-
-interface DownloadOptions {
-  /**
-   * 自动重命名
-   * @default false
-   */
-  autoRename?: boolean;
-  /**
-   * 最大并发下载数
-   * @default 10
-   */
-  concurrency?: number;
-  /**
-   * 超时
-   * @default 30000
-   */
-  timeout?: number;
 }
