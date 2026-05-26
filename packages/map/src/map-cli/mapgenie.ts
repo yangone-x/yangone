@@ -83,7 +83,11 @@ async function run(options: MapgenieOptions) {
         images: imageUrls,
         outputPath: getPathWithBase(mergeOptions.maps.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${getPathWithBase(mergeOptions.maps.outputPath)}`));
+      outro(
+        chalk(
+          `📂 文件保存位置: ${getPathWithBase(mergeOptions.maps.outputPath)}`,
+        ),
+      );
     }
 
     if (downRes?.failCount > 0) {

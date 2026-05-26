@@ -67,7 +67,11 @@ async function run(options: GamerSkyOptions) {
         images: iconUrls,
         outputPath: getPathWithBase(mergeOptions.icons.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${getPathWithBase(mergeOptions.icons.outputPath)}`));
+      outro(
+        chalk(
+          `📂 文件保存位置: ${getPathWithBase(mergeOptions.icons.outputPath)}`,
+        ),
+      );
     }
 
     let downRes: any;
@@ -89,7 +93,11 @@ async function run(options: GamerSkyOptions) {
         images: imageUrls,
         outputPath: getPathWithBase(mergeOptions.maps.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${getPathWithBase(mergeOptions.maps.outputPath)}`));
+      outro(
+        chalk(
+          `📂 文件保存位置: ${getPathWithBase(mergeOptions.maps.outputPath)}`,
+        ),
+      );
     }
 
     if (downRes?.failCount > 0) {

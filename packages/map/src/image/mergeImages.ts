@@ -13,6 +13,12 @@ export interface MergeImagesOptions {
    */
   cols?: number;
   /**
+   * 压缩等级 (0-9)
+   * 适用：PNG
+   * @default 6
+   */
+  compressionLevel?: number;
+  /**
    * 最大并发
    * @default 10
    */
@@ -54,7 +60,9 @@ export interface MergeImagesOptions {
    */
   outputPath?: string;
   /**
-   * 输出质量
+   * 输出质量 (0-100)
+   * PNG: 忽略此值，使用 compressionLevel
+   * JPEG/WEBP: 控制质量
    * @default 80
    */
   quality?: number;
@@ -89,6 +97,7 @@ export async function mergeImages(options: MergeImagesOptions) {
     quality: 80,
     concurrency: 10,
     imagesPath: './images',
+    compressionLevel: 6,
   };
 
   const mergeOptions = merge(defaultOptions, options);
@@ -239,7 +248,7 @@ export async function mergeImages(options: MergeImagesOptions) {
   } else {
     // 默认 PNG
     pipeline = pipeline.png({
-      compressionLevel: 6,
+      compressionLevel: mergeOptions.compressionLevel,
       adaptiveFiltering: false,
     });
   }

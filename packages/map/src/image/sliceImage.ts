@@ -9,6 +9,12 @@ import pLimit from 'p-limit';
 import sharp from 'sharp';
 export interface SliceImageOptions {
   /**
+   * 压缩等级 (0-9)
+   * 适用：PNG
+   * @default 6
+   */
+  compressionLevel?: number;
+  /**
    * 最大并发
    * @default 10
    */
@@ -49,6 +55,7 @@ export interface SliceImageOptions {
    * @default "png"
    */
   tileExt?: string;
+
   /**
    * 瓦片大小
    * @default 256
@@ -69,6 +76,7 @@ export async function sliceImage(options: SliceImageOptions) {
     sharpPixelLimit: 1_000_000_000,
     quality: 80,
     imagePath: './merged_image.png',
+    compressionLevel: 6,
   };
 
   const mergeOptions = merge(defaultOptions, options);
@@ -121,9 +129,8 @@ export async function sliceImage(options: SliceImageOptions) {
     } else if (ext === 'webp') {
       pipeline = pipeline.webp({ quality, effort: 1 }); // effort 1 更快
     } else {
-      // PNG: 降低压缩等级以换取速度
       pipeline = pipeline.png({
-        compressionLevel: 1,
+        compressionLevel: mergeOptions.compressionLevel,
         adaptiveFiltering: false,
       });
     }
