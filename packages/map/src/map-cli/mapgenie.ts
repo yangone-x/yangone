@@ -17,40 +17,40 @@ async function run(options: MapgenieOptions) {
   try {
     const defaultOptions = {
       basePath: '/',
-      dataFilePath: '/mapInfo.json',
+      dataFilePath: './mapInfo.json',
       maps: {
-        outputPath: '/images',
+        outputPath: './images',
         low: 8128,
         high: 8192,
         url: '',
         downFileExt: 'png',
       },
       mergeImages: {
-        imagesPath: '/images',
-        outputPath: '/merged_image.png',
+        imagesPath: './images',
+        outputPath: './merged_image.png',
         direction: 'horizontal',
         imagesPerRow: 64,
         imageWidth: 256,
         imageHeight: 256,
       },
       createTiles: {
-        imagePath: '/merged_image.png',
-        outputPath: '/maps',
+        imagePath: './merged_image.png',
+        outputPath: './maps',
         tileSize: 256,
       },
       points: {
-        outputPath: '/points.json',
+        outputPath: './points.json',
         offset: 1,
       },
       pointsToExcel: {
-        inputPath: '/points.json',
-        outputPath: '/points.xlsx',
+        inputPath: './points.json',
+        outputPath: './points.xlsx',
         worksheetName: 'Sheet1',
       },
       excelToPoints: {
-        inputPath: '/points.json',
-        inputExcelPath: '/newPoints.xlsx',
-        outputPath: '/newPoints.json',
+        inputPath: './points.json',
+        inputExcelPath: './newPoints.xlsx',
+        outputPath: './newPoints.json',
         worksheetName: 'Sheet1',
       },
     };
@@ -83,7 +83,7 @@ async function run(options: MapgenieOptions) {
         images: imageUrls,
         outputPath: getPathWithBase(mergeOptions.maps.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${mergeOptions.maps.outputPath}`));
+      outro(chalk(`📂 文件保存位置: ${getPathWithBase(mergeOptions.maps.outputPath)}`));
     }
 
     if (downRes?.failCount > 0) {

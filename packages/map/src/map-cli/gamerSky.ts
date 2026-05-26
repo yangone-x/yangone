@@ -17,20 +17,20 @@ async function run(options: GamerSkyOptions) {
   try {
     const defaultOptions = {
       basePath: '/',
-      dataFilePath: '/mapInfo.json',
+      dataFilePath: './mapInfo.json',
       icons: {
-        outputPath: '/icons',
+        outputPath: './icons',
       },
       maps: {
-        outputPath: '/images',
+        outputPath: './images',
         low: 8128,
         high: 8192,
         url: '',
         downFileExt: 'png',
       },
       mergeImages: {
-        imagesPath: '/images',
-        outputPath: '/merged_image.png',
+        imagesPath: './images',
+        outputPath: './merged_image.png',
         direction: 'horizontal',
         cols: 64,
         rows: 64,
@@ -39,13 +39,13 @@ async function run(options: GamerSkyOptions) {
         imagePattern: '{x}_{y}.png',
       },
       createTiles: {
-        imagePath: '/merged_image.png',
-        outputPath: '/maps',
+        imagePath: './merged_image.png',
+        outputPath: './maps',
         tileSize: 256,
       },
       points: {
-        outputPath: '/points.json',
-        outputAreaPath: '/points_area.json',
+        outputPath: './points.json',
+        outputAreaPath: './points_area.json',
         offset: 1,
       },
     };
@@ -67,7 +67,7 @@ async function run(options: GamerSkyOptions) {
         images: iconUrls,
         outputPath: getPathWithBase(mergeOptions.icons.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${mergeOptions.icons.outputPath}`));
+      outro(chalk(`📂 文件保存位置: ${getPathWithBase(mergeOptions.icons.outputPath)}`));
     }
 
     let downRes: any;
@@ -89,7 +89,7 @@ async function run(options: GamerSkyOptions) {
         images: imageUrls,
         outputPath: getPathWithBase(mergeOptions.maps.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${mergeOptions.maps.outputPath}`));
+      outro(chalk(`📂 文件保存位置: ${getPathWithBase(mergeOptions.maps.outputPath)}`));
     }
 
     if (downRes?.failCount > 0) {

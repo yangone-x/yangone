@@ -36,8 +36,9 @@ export interface MergeImagesOptions {
   imagePattern?: string;
   /**
    * 切片路径
+   * @default "./images"
    */
-  imagesPath: string;
+  imagesPath?: string;
   /**
    * 图片宽度
    * @default 256
@@ -87,6 +88,7 @@ export async function mergeImages(options: MergeImagesOptions) {
     sharpPixelLimit: 1_000_000_000,
     quality: 80,
     concurrency: 10,
+    imagesPath: './images',
   };
 
   const mergeOptions = merge(defaultOptions, options);

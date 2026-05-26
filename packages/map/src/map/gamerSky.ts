@@ -125,7 +125,7 @@ export async function getLandmarkList(mapInfo: MapInfo) {
  */
 export async function genPoints(options: any) {
   const defaultOptions = {
-    outputPath: '/points.json',
+    outputPath: './points.json',
     offset: 1,
   };
 

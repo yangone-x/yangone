@@ -1,6 +1,6 @@
 {
   "name": "@yangone/climb-map",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "homepage": "https://github.com/yangone-x/yangone",
   "bugs": "https://github.com/yangone-x/yangone/issues",
   "repository": "packages/climb-map",
@@ -17,12 +17,12 @@
   ],
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "default": "./dist/index.mjs"
     },
     "./map-cli": {
-      "types": "./src/map-cli/index.ts",
+      "types": "./dist/map-cli/index.d.ts",
       "import": "./dist/map-cli/index.mjs",
       "default": "./dist/map-cli/index.mjs"
     }
@@ -30,12 +30,12 @@
   "publishConfig": {
     "exports": {
       ".": {
-        "types": "./src/index.ts",
+        "types": "./dist/index.d.ts",
         "import": "./dist/index.mjs",
         "default": "./dist/index.mjs"
       },
       "./map-cli": {
-        "types": "./src/map-cli/index.ts",
+        "types": "./dist/map-cli/index.d.ts",
         "import": "./dist/map-cli/index.mjs",
         "default": "./dist/map-cli/index.mjs"
       }

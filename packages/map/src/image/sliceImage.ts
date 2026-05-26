@@ -15,8 +15,9 @@ export interface SliceImageOptions {
   concurrency?: number;
   /**
    * 原图路径
+   * @default './merged_image.png'
    */
-  imagePath: string;
+  imagePath?: string;
   /**
    * 最大缩放级别
    * @default 6
@@ -28,7 +29,7 @@ export interface SliceImageOptions {
   onTick?: ({ z, x, y }: { x: number; y: number; z: number }) => void;
   /**
    * 瓦片保存路径
-   * @default '/maps'
+   * @default './maps'
    */
   outputPath?: string;
   /**
@@ -60,13 +61,14 @@ export interface SliceImageOptions {
  */
 export async function sliceImage(options: SliceImageOptions) {
   const defaultOptions = {
-    outputPath: '/maps',
+    outputPath: './maps',
     tileSize: 256,
     maxZoom: 6,
     concurrency: 10,
     tileExt: 'png',
     sharpPixelLimit: 1_000_000_000,
     quality: 80,
+    imagePath: './merged_image.png',
   };
 
   const mergeOptions = merge(defaultOptions, options);

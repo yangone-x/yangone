@@ -64,7 +64,7 @@ interface ProcessedCategoryGroup {
  */
 export async function genPoints(options: any) {
   const defaultOptions = {
-    outputPath: '/points.json',
+    outputPath: './points.json',
     offset: 1,
   };
 
@@ -194,8 +194,8 @@ export interface PointsToExcelOptions {
  */
 export async function writePointExcel(options: PointsToExcelOptions) {
   const defaultOptions = {
-    inputPath: '/points.json',
-    outputPath: '/newPoints.xlsx',
+    inputPath: './points.json',
+    outputPath: './newPoints.xlsx',
     worksheetName: 'Sheet1',
   };
 
@@ -324,9 +324,9 @@ export interface ExcelToPointsOptions {
  */
 export async function readPointExcel(options: ExcelToPointsOptions) {
   const defaultOptions = {
-    inputPath: '/points.json',
-    inputExcelPath: '/newPoints.xlsx',
-    outputPath: '/newPoints.json',
+    inputPath: './points.json',
+    inputExcelPath: './newPoints.xlsx',
+    outputPath: './newPoints.json',
     worksheetName: 'Sheet1',
   };
   const mergeOptions = { ...defaultOptions, ...options };

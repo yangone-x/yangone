@@ -13,14 +13,9 @@ export async function mergeImagesCli(options: MergeImagesOptions) {
   intro(chalk.bold(`🚀 启动图片合并...`));
 
   const defaultOptions = {
-    imagesPath: '/images',
-    outputPath: '/merged_image.webp',
-    direction: 'horizontal',
-    cols: 64,
+    imagesPath: './images',
+    outputPath: './merged_image.webp',
     rows: 64,
-    imageWidth: 256,
-    imageHeight: 256,
-    imagePattern: '{x}_{y}.png',
   };
 
   const mergeOptions = merge(defaultOptions, options);

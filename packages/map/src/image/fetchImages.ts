@@ -41,7 +41,7 @@ export interface FetchImagesOptions {
   }) => void;
   /**
    * 瓦片保存路径
-   * @default '/images'
+   * @default './images'
    */
   outputPath?: string;
   /**
@@ -80,7 +80,7 @@ export async function fetchImages(
     autoRename: false,
     concurrency: 10,
     timeout: 30_000, // 30秒超时
-    outputPath: '/images',
+    outputPath: './images',
   };
   const mergeOptions = merge(defaultOptions, options);
 

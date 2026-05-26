@@ -19,7 +19,7 @@ export async function fetchImagesCli(
 ): Promise<FetchImagesResult> {
   // 默认配置项
   const defaultOptions = {
-    outputPath: '/images',
+    outputPath: './images',
   };
   const mergeOptions = merge(defaultOptions, options);
 
@@ -53,6 +53,7 @@ export async function fetchImagesCli(
 
     const downRes = await fetchImages({
       ...mergeOptions,
+      images: imageData,
       onTick({ filename }) {
         prog.advance(undefined, filename);
       },

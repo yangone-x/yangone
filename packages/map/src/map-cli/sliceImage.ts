@@ -13,11 +13,9 @@ export async function sliceImageCli(options: SliceImageOptions) {
   intro(chalk.bold(`🚀 启动图片切片...`));
 
   const defaultOptions = {
-    outputPath: '/maps',
-    tileSize: 256,
+    outputPath: './maps',
     maxZoom: 6,
-    concurrency: 5,
-    tileExt: 'png',
+    imagePath: './merged_image.png',
   };
 
   const mergeOptions = merge(defaultOptions, options);
