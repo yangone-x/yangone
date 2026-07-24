@@ -79,7 +79,7 @@ export interface MergeImagesOptions {
 }
 
 /**
- * 合成图片 (优化内存版)
+ * 合成图片
  * @param options 合成图片参数
  * @returns
  */

@@ -25,10 +25,11 @@ export interface SliceImageOptions {
    */
   imagePath?: string;
   /**
-   * 最大缩放级别
-   * @default 6
+   * 最小缩放级别
+   * 目录结构从该层开始，例如 /8/127/127.jpg
+   * @default 8
    */
-  maxZoom?: number;
+  minZoom?: number;
   /**
    * 进度回调
    */
@@ -70,7 +71,7 @@ export async function sliceImage(options: SliceImageOptions) {
   const defaultOptions = {
     outputPath: './maps',
     tileSize: 256,
-    maxZoom: 6,
+    minZoom: 8,
     concurrency: 10,
     tileExt: 'png',
     sharpPixelLimit: 1_000_000_000,
@@ -97,6 +98,13 @@ export async function sliceImage(options: SliceImageOptions) {
 
   const originW = meta.width; // 原图宽度
   const originH = meta.height; // 原图高度
+  const longestSide = Math.max(originW, originH);
+  const minZoom = mergeOptions.minZoom;
+  const minTileIndex = 2 ** (minZoom - 1) - 1;
+  const maxZoom = Math.max(
+    minZoom,
+    minZoom + Math.ceil(Math.log2(longestSide / mergeOptions.tileSize)),
+  );
 
   let generatedTiles = 0;
 
@@ -138,10 +146,13 @@ export async function sliceImage(options: SliceImageOptions) {
     return pipeline.toFile(tilePath);
   };
 
-  for (let z = 0; z <= mergeOptions.maxZoom; z++) {
-    const scaleFactor = 1 / 2 ** (mergeOptions.maxZoom - z);
+  for (let z = minZoom; z <= maxZoom; z++) {
+    const scaleFactor = 1 / 2 ** (maxZoom - z);
     const currW = Math.floor(originW * scaleFactor);
     const currH = Math.floor(originH * scaleFactor);
+    const levelOffset = z - minZoom;
+    const startX = minTileIndex * 2 ** levelOffset;
+    const startY = minTileIndex * 2 ** levelOffset;
 
     if (currW < 1 || currH < 1) continue;
 
@@ -172,7 +183,7 @@ export async function sliceImage(options: SliceImageOptions) {
     const mkdirTasks = [];
     for (let x = 0; x < cols; x++) {
       mkdirTasks.push(
-        fs.mkdir(path.join(zDirRoot, String(x)), { recursive: true }),
+        fs.mkdir(path.join(zDirRoot, String(startX + x)), { recursive: true }),
       );
     }
     await Promise.all(mkdirTasks);
@@ -241,19 +252,20 @@ export async function sliceImage(options: SliceImageOptions) {
                   );
                 }
               }
-
+              const outputX = startX + x;
+              const outputY = startY + y;
               const tilePath = path.join(
                 absoluteOutRoot,
                 String(z),
-                String(x),
-                `${y}.${mergeOptions.tileExt}`,
+                String(outputX),
+                `${outputY}.${mergeOptions.tileExt}`,
               );
 
               await encodeTile(finalBuffer, finalW, finalH, tilePath);
               generatedTiles++;
 
               if (mergeOptions?.onTick) {
-                mergeOptions.onTick({ z, x, y });
+                mergeOptions.onTick({ z, x: outputX, y: outputY });
               }
             } catch {}
           }),
@@ -268,6 +280,7 @@ export async function sliceImage(options: SliceImageOptions) {
     outputPath: absoluteOutRoot,
     tilesGenerated: generatedTiles,
     originalSize: `${originW}x${originH}`,
-    maxZoom: mergeOptions.maxZoom,
+    minZoom,
+    maxZoom,
   };
 }

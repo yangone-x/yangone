@@ -23,6 +23,26 @@ interface CommonOptions {
    */
   dataFilePath?: string;
   /**
+   * 点位信息
+   */
+  mapData?: {
+    /**
+     * 是否启用
+     * @default false
+     */
+    enabled?: boolean;
+    /**
+     * 图标模板
+     * @default '/{index}.png'
+     */
+    iconUrlTemplate?: string;
+    /**
+     * 输出文件路径
+     * @default "./mapData.json"
+     */
+    outputPath?: string;
+  };
+  /**
    * 地图图片
    */
   maps?: {
@@ -61,6 +81,7 @@ interface CommonOptions {
      */
     url: string;
   };
+
   /**
    * 合并图片
    */
@@ -71,32 +92,6 @@ interface CommonOptions {
      */
     enabled?: boolean;
   } & MergeImagesOptions;
-
-  /**
-   * 点位信息
-   */
-  points?: {
-    /**
-     * 是否启用
-     * @default false
-     */
-    enabled?: boolean;
-    /**
-     * 偏移
-     * @default 1
-     */
-    offset?: number;
-    /**
-     * 输出区域位置文件路径
-     * @default "./points_area.json"
-     */
-    outputAreaPath?: string;
-    /**
-     * 输出文件路径
-     * @default "./points.json"
-     */
-    outputPath?: string;
-  };
 }
 
 export interface GamerSkyOptions extends CommonOptions {
@@ -121,9 +116,9 @@ export interface MapgenieOptions extends CommonOptions {
   /**
    * 点位信息转换
    */
-  excelToPoints?: mapgenie.ExcelToPointsOptions;
+  excelToPoints?: mapgenie.ExcelToMapDataOptions;
   /**
    * 点位信息转换
    */
-  pointsToExcel?: mapgenie.PointsToExcelOptions;
+  pointsToExcel?: mapgenie.MapDataToExcelOptions;
 }

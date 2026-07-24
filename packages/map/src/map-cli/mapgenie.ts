@@ -38,19 +38,18 @@ async function run(options: MapgenieOptions) {
         outputPath: './maps',
         tileSize: 256,
       },
-      points: {
-        outputPath: './points.json',
-        offset: 1,
+      mapData: {
+        outputPath: './mapData.json',
       },
       pointsToExcel: {
-        inputPath: './points.json',
-        outputPath: './points.xlsx',
+        inputPath: './mapData.json',
+        outputPath: './mapData.xlsx',
         worksheetName: 'Sheet1',
       },
       excelToPoints: {
-        inputPath: './points.json',
-        inputExcelPath: './newPoints.xlsx',
-        outputPath: './newPoints.json',
+        inputPath: './mapData.json',
+        inputExcelPath: './newMapData.xlsx',
+        outputPath: './newMapData.json',
         worksheetName: 'Sheet1',
       },
     };
@@ -110,20 +109,20 @@ async function run(options: MapgenieOptions) {
       }
     }
 
-    if (options?.points && options.points?.enabled !== false) {
-      intro(chalk.bold(`🚀 开始生成地标数据文件...`));
-      const res = await mapgenie.genPoints({
-        ...mergeOptions.points,
+    if (options?.mapData && options.mapData?.enabled !== false) {
+      intro(chalk.bold(`🚀 开始生成地图数据文件...`));
+      const res = await mapgenie.genMapData({
+        ...mergeOptions.mapData,
         gameUrl: path.basename(mergeOptions.basePath),
         mapInfo,
-        outputPath: getPathWithBase(mergeOptions.points.outputPath),
+        outputPath: getPathWithBase(mergeOptions.mapData.outputPath),
       });
       outro(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
     }
 
     if (options.pointsToExcel && options.pointsToExcel?.enabled !== false) {
       intro(chalk.bold(`🚀 开始根据地标生成地标数据表格文件...`));
-      const exRes = await mapgenie.writePointExcel({
+      const exRes = await mapgenie.writeMapDataExcel({
         ...mergeOptions.pointsToExcel,
         inputPath: getPathWithBase(mergeOptions.pointsToExcel.inputPath),
         outputPath: getPathWithBase(mergeOptions.pointsToExcel.outputPath),
@@ -133,7 +132,7 @@ async function run(options: MapgenieOptions) {
 
     if (options?.excelToPoints && options.excelToPoints?.enabled !== false) {
       intro(chalk.bold(`🚀 开始根据数据表格文件生成地标数据...`));
-      const exRes = await mapgenie.readPointExcel({
+      const exRes = await mapgenie.readMapDataExcel({
         ...mergeOptions.excelToPoints,
         inputPath: getPathWithBase(mergeOptions.excelToPoints.inputPath),
         inputExcelPath: getPathWithBase(

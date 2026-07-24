@@ -1,172 +1,97 @@
-import Decimal from 'decimal.js';
+import type { MapData } from './type';
+
 import ExcelJS from 'exceljs';
 
 import { readJSON, writeJSON } from '../fs';
 
-// 类别
-interface Category {
-  display_type: string;
-  group_id: number;
-  icon: string;
-  id: number;
-  title: string;
-}
-// 组别
-interface Group {
-  categories: Category[];
-  color: string;
-  game_id: number;
-  id: number;
-  title: string;
-}
-interface Location {
-  category_id: number;
-  description: string;
-  id: number;
-  latitude: string;
-  longitude: string;
-  map_id: number;
-  region_id: number;
-  title: string;
-}
-
-interface MapInfo {
-  groups: Group[];
-  locations: Location[];
-}
-
-// 类型定义：处理后的地标点数据
-interface ProcessedPoint {
-  id: number;
-  title: string;
-  x: number;
-  y: number;
-}
-
-interface ProcessedCategoryItem {
-  data: ProcessedPoint[];
-  display_type: string;
-  iconFont: string;
-  id: number;
-  num: number;
-  title: string;
-}
-
-interface ProcessedCategoryGroup {
-  color: string;
-  data: ProcessedCategoryItem[];
-  id: number;
-  title: string;
-}
-
 /**
- * 处理地标数据并保存到文件
+ * 处理地图数据并保存到文件
  */
-export async function genPoints(options: any) {
+export async function genMapData(options: any) {
   const defaultOptions = {
-    outputPath: './points.json',
-    offset: 1,
+    outputPath: './mapData.json',
   };
 
   const mergeOptions = { ...defaultOptions, ...options };
 
+  const mapInfo = mergeOptions.mapInfo;
+
   // 读取原始数据
-  const categoryData: MapInfo = mergeOptions.mapInfo;
+  const regions = mapInfo.regions.map((item: any, index: number) => {
+    return {
+      id: index,
+      title: item.title,
+      visibleZoom: '8,9,10,11,12,13',
+      centerX: Number.parseFloat(item.center_x),
+      centerY: Number.parseFloat(item.center_y),
+    };
+  });
+  const categoryMap: Record<number, any> = {};
+  let categoryIdCounter = 0;
 
-  if (!categoryData.locations) {
-    throw new Error('地标数据为空');
-  }
+  const groups = mapInfo.groups.map((item: any, index: number) => {
+    return {
+      id: index,
+      title: item.title,
+      color: item.color,
+      categories: item.categories.map((cate: any) => {
+        const res = {
+          id: categoryIdCounter++,
+          groupId: index,
+          title: cate.title,
+          icon: cate.icon,
+          locationsCount: cate.locations_count,
+        };
+        categoryMap[cate.id] = res;
+        return res;
+      }),
+    };
+  });
 
-  // 处理分类数据
-  const processedCategories: ProcessedCategoryGroup[] = categoryData.groups.map(
-    (group, index) => {
-      return {
-        id: index + 1,
-        title: group.title,
-        color: group.color,
-        data: group.categories.map((catalog) => {
-          return {
-            title: catalog.title,
-            num: 0,
-            iconFont: catalog.icon,
-            id: catalog.id,
-            data: [] as ProcessedPoint[],
-            display_type: catalog.display_type,
-          };
-        }),
-      };
+  const locations = mapInfo.locations.map((item: any, index: number) => {
+    const category = categoryMap[item.category_id];
+    return {
+      id: index,
+      title: item.title,
+      icon: category.icon,
+      longitude: item.longitude,
+      latitude: item.latitude,
+      categoryId: category.id,
+      category,
+    };
+  });
+
+  const mapData: MapData = {
+    map: {
+      id: mapInfo.map.id,
+      title: mapInfo.map.title,
     },
-  );
-
-  // 构建地标映射表
-  const landmarkMap: Record<number, ProcessedPoint[]> = {};
-  let idCounter = 1;
-
-  // 转换系数常量
-  const X_COEFFICIENT = new Decimal(11_659.388).mul(
-    new Decimal(mergeOptions.offset),
-  );
-  const Y_COEFFICIENT = new Decimal(-11_693.33).mul(
-    new Decimal(mergeOptions.offset),
-  );
-  const X_OFFSET = new Decimal(1.405_672);
-  const Y_OFFSET = new Decimal(1.404);
-
-  // 处理每个地标点
-  categoryData.locations.forEach((landmark) => {
-    const categoryId = landmark.category_id;
-
-    if (!landmarkMap[categoryId]) {
-      landmarkMap[categoryId] = [];
-    }
-
-    // 高精度坐标转换
-    const x = new Decimal(landmark.longitude)
-      .plus(X_OFFSET)
-      .times(X_COEFFICIENT)
-      .toNumber();
-    const y = new Decimal(landmark.latitude)
-      .minus(Y_OFFSET)
-      .times(Y_COEFFICIENT)
-      .toNumber();
-
-    landmarkMap[categoryId].push({
-      id: idCounter,
-      title: landmark.title,
-      x,
-      y,
-    });
-
-    idCounter++;
-  });
-
-  // 合并数据
-  processedCategories.forEach((category) => {
-    category.data.forEach((item) => {
-      const points = landmarkMap[item.id];
-      if (points) {
-        item.data = points;
-        item.num = points.length;
-      } else {
-        item.data = [];
-        item.num = 0;
-      }
-    });
-  });
+    mapConfig: {
+      tileSize: 256,
+      tileMinZoom: mapInfo.mapConfig.tile_sets[0].min_zoom,
+      tileMaxZoom: mapInfo.mapConfig.tile_sets[0].max_zoom,
+      tileUrlsRoot: '/maps/{z}/{x}/{y}.png',
+      defaultLat: mapInfo.mapConfig.start_lat,
+      defaultLng: mapInfo.mapConfig.start_lng,
+      defaultZoom: mapInfo.mapConfig.initial_zoom,
+    },
+    regions,
+    groups,
+    locations,
+  };
 
   // 保存结果
-  await writeJSON(mergeOptions.outputPath, processedCategories);
+  await writeJSON(mergeOptions.outputPath, mapData);
 
   return {
     outputPath: mergeOptions.outputPath,
-    points: processedCategories,
   };
 }
 
 /**
  * 点位信息转换
  */
-export interface PointsToExcelOptions {
+export interface MapDataToExcelOptions {
   /**
    * 是否启用
    * @default false
@@ -174,12 +99,12 @@ export interface PointsToExcelOptions {
   enabled?: boolean;
   /**
    * 输入点位文件
-   * @default "/points.json"
+   * @default "./mapData.json"
    */
   inputPath?: string;
   /**
    * 输出excel文件路径
-   * @default "/points.xlsx"
+   * @default "./mapData.xlsx"
    */
   outputPath?: string;
   /**
@@ -192,16 +117,16 @@ export interface PointsToExcelOptions {
 /**
  * 生成Excel文件
  */
-export async function writePointExcel(options: PointsToExcelOptions) {
+export async function writeMapDataExcel(options: MapDataToExcelOptions) {
   const defaultOptions = {
-    inputPath: './points.json',
-    outputPath: './newPoints.xlsx',
+    inputPath: './mapData.json',
+    outputPath: './mapData.xlsx',
     worksheetName: 'Sheet1',
   };
 
   const mergeOptions = { ...defaultOptions, ...options };
 
-  const pointData = await readJSON<ProcessedCategoryGroup[]>(
+  const pointData = await readJSON<any[]>(
     mergeOptions.inputPath,
   );
 
@@ -255,8 +180,8 @@ export async function writePointExcel(options: PointsToExcelOptions) {
   });
 
   pointData.forEach((group) => {
-    group.data.forEach((category) => {
-      category.data.forEach((point) => {
+    group.data.forEach((category: any) => {
+      category.data.forEach((point: any) => {
         const newRow = worksheet.addRow({
           groupId: group.id,
           groupNameEn: group.title,
@@ -291,7 +216,7 @@ export async function writePointExcel(options: PointsToExcelOptions) {
 /**
  * 点位信息转换
  */
-export interface ExcelToPointsOptions {
+export interface ExcelToMapDataOptions {
   /**
    * 是否启用
    * @default false
@@ -299,17 +224,17 @@ export interface ExcelToPointsOptions {
   enabled?: boolean;
   /**
    * 输入点位excel文件路径
-   * @default "/newPoints.excel"
+   * @default "./newMapData.xlsx"
    */
   inputExcelPath?: string;
   /**
    * 输入点位文件
-   * @default "/points.json"
+   * @default "./mapData.json"
    */
   inputPath?: string;
   /**
    * 输出excel文件路径
-   * @default "/newPoints.json"
+   * @default "./newMapData.json"
    */
   outputPath?: string;
   /**
@@ -322,7 +247,7 @@ export interface ExcelToPointsOptions {
 /**
  * 处理Excel文件
  */
-export async function readPointExcel(options: ExcelToPointsOptions) {
+export async function readMapDataExcel(options: ExcelToMapDataOptions) {
   const defaultOptions = {
     inputPath: './points.json',
     inputExcelPath: './newPoints.xlsx',
@@ -331,8 +256,8 @@ export async function readPointExcel(options: ExcelToPointsOptions) {
   };
   const mergeOptions = { ...defaultOptions, ...options };
 
-  const pointData: ProcessedCategoryGroup[] = await readJSON<
-    ProcessedCategoryGroup[]
+  const pointData: any[] = await readJSON<
+    any[]
   >(mergeOptions.inputPath);
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(mergeOptions.inputExcelPath);
@@ -394,9 +319,9 @@ export async function readPointExcel(options: ExcelToPointsOptions) {
 
   pointData.forEach((group) => {
     group.title = groupMap[group.id];
-    group.data.forEach((category) => {
+    group.data.forEach((category: any) => {
       category.title = categoryMap[category.id];
-      category.data.forEach((point) => {
+      category.data.forEach((point: any) => {
         point.title = pointMap[point.id];
       });
     });

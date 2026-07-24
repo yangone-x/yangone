@@ -43,10 +43,8 @@ async function run(options: GamerSkyOptions) {
         outputPath: './maps',
         tileSize: 256,
       },
-      points: {
-        outputPath: './points.json',
-        outputAreaPath: './points_area.json',
-        offset: 1,
+      mapData: {
+        outputPath: './mapData.json',
       },
     };
     // 合并配置项
@@ -120,13 +118,12 @@ async function run(options: GamerSkyOptions) {
       }
     }
 
-    if (options?.points && options.points?.enabled !== false) {
-      intro(chalk.bold(`🚀 开始生成地标数据文件...`));
-      const res = await gamerSky.genPoints({
-        ...mergeOptions.points,
+    if (options?.mapData && options.mapData?.enabled !== false) {
+      intro(chalk.bold(`🚀 开始生成地图数据文件...`));
+      const res = await gamerSky.genMapData({
+        ...mergeOptions.mapData,
         mapInfo,
-        outputPath: getPathWithBase(mergeOptions.points.outputPath),
-        outputAreaPath: getPathWithBase(mergeOptions.points.outputAreaPath),
+        outputPath: getPathWithBase(mergeOptions.mapData.outputPath),
       });
       outro(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
     }

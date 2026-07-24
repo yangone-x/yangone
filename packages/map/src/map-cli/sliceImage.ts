@@ -6,6 +6,7 @@ import fs from 'node:fs/promises';
 import { confirm, intro, log, outro, progress } from '@clack/prompts';
 import chalk from 'chalk';
 import { merge } from 'lodash-es';
+import sharp from 'sharp';
 
 import { sliceImage } from '../image';
 
@@ -14,8 +15,10 @@ export async function sliceImageCli(options: SliceImageOptions) {
 
   const defaultOptions = {
     outputPath: './maps',
-    maxZoom: 6,
+    minZoom: 8,
     imagePath: './merged_image.png',
+    sharpPixelLimit: 1_000_000_000,
+    tileSize: 256,
   };
 
   const mergeOptions = merge(defaultOptions, options);
@@ -44,11 +47,29 @@ export async function sliceImageCli(options: SliceImageOptions) {
     await fs.rm(mergeOptions.outputPath, { recursive: true, force: true });
   }
 
+  const imageMeta = await sharp(mergeOptions.imagePath, {
+    limitInputPixels: mergeOptions.sharpPixelLimit,
+  }).metadata();
+  if (!imageMeta.width || !imageMeta.height) {
+    throw new Error('无法获取图片尺寸');
+  }
+
+  const longestSide = Math.max(imageMeta.width, imageMeta.height);
+  const tileSize = mergeOptions.tileSize;
+  const minZoom = mergeOptions.minZoom;
+  const maxZoom = Math.max(
+    minZoom,
+    minZoom + Math.ceil(Math.log2(longestSide / tileSize)),
+  );
+
   // 计算总进度
-  // 累加 从  2的0次方到 2的maxZoom次方
-  const total = Array.from({ length: mergeOptions.maxZoom + 1 })
-    .map((_, i) => 2 ** i)
-    .reduce((acc, cur) => acc + cur * cur, 0);
+  let total = 0;
+  for (let z = minZoom; z <= maxZoom; z++) {
+    const scaleFactor = 1 / 2 ** (maxZoom - z);
+    const currW = Math.floor(imageMeta.width * scaleFactor);
+    const currH = Math.floor(imageMeta.height * scaleFactor);
+    total += Math.ceil(currW / tileSize) * Math.ceil(currH / tileSize);
+  }
 
   // 进度条
   const prog = progress({
