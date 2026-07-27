@@ -1,4 +1,4 @@
-interface Category {
+export interface Category {
   groupId: number;
   icon: string;
   id: number;
@@ -6,13 +6,14 @@ interface Category {
   title: string;
 }
 
-interface Group {
+export interface Group {
   categories: Category[];
+  color?: string;
   id: number;
   title: string;
 }
 
-interface Region {
+export interface Region {
   centerX: number;
   centerY: number;
   id: number;
@@ -20,7 +21,7 @@ interface Region {
   visibleZoom: string;
 }
 
-interface Location {
+export interface Location {
   category: Category;
   categoryId: number;
   fullTitle: string;

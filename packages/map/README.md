@@ -54,14 +54,14 @@ async function main() {
 
 #### 参数说明
 
-| 参数 | 类型 | 默认值 | 描述 |
-| :-- | :-- | :-- | :-- |
-| `options.images` | `string[]` \| `[string, string][]` | - | 图片 URL 数组，或 `[URL, 文件名]` 元组数组 |
-| `options.outputPath` | `string` | `/images` | 保存文件夹路径 |
-| `options.concurrency` | `number` | `10` | 最大并发下载数 |
-| `options.timeout` | `number` | `30000` | 单个请求超时时间 (ms) |
-| `options.onTick` | `function` | - | 每个文件处理完成后的回调 |
-| `options.onTickError` | `function` | - | 每个文件处理失败后的回调 |
+| 参数                    | 类型                                   | 默认值      | 描述                                        |
+| :---------------------- | :------------------------------------- | :---------- | :------------------------------------------ |
+| `options.images`      | `string[]` \| `[string, string][]` | -           | 图片 URL 数组，或`[URL, 文件名]` 元组数组 |
+| `options.outputPath`  | `string`                             | `/images` | 保存文件夹路径                              |
+| `options.concurrency` | `number`                             | `10`      | 最大并发下载数                              |
+| `options.timeout`     | `number`                             | `30000`   | 单个请求超时时间 (ms)                       |
+| `options.onTick`      | `function`                           | -           | 每个文件处理完成后的回调                    |
+| `options.onTickError` | `function`                           | -           | 每个文件处理失败后的回调                    |
 
 ---
 
@@ -85,7 +85,7 @@ async function main() {
     imagePath: './source/big-map.png',
     outputPath: './tiles/output',
     tileSize: 256,
-    maxZoom: 6,
+    minZoom: 6,
     tileExt: 'png',
     quality: 80,
     concurrency: 4,
@@ -100,32 +100,32 @@ async function main() {
 
 #### 参数说明
 
-| 参数 | 类型 | 默认值 | 描述 |
-| :-- | :-- | :-- | :-- |
-| `options.imagePath` | `string` | **(必填)** | 原始大图片的路径 |
-| `options.outputPath` | `string` | `/maps` | 瓦片输出根目录 |
-| `options.tileSize` | `number` | `256` | 瓦片尺寸 (px) |
-| `options.maxZoom` | `number` | `6` | 最大缩放级别 (Z轴) |
-| `options.tileExt` | `string` | `png` | 输出瓦片格式 (`png`, `jpg`, `webp`) |
-| `options.quality` | `number` | `80` | 输出质量 (0-100)，PNG 忽略此项 |
-| `options.concurrency` | `number` | `CPU核数` | 并发处理任务数 |
-| `options.sharpPixelLimit` | `number` | `1e9` | Sharp 库像素限制防止内存溢出 |
-| `options.onTick` | `function` | - | 每完成一个 Zoom 层级的回调 |
+| 参数                        | 类型         | 默认值           | 描述                                      |
+| :-------------------------- | :----------- | :--------------- | :---------------------------------------- |
+| `options.imagePath`       | `string`   | **(必填)** | 原始大图片的路径                          |
+| `options.outputPath`      | `string`   | `/maps`        | 瓦片输出根目录                            |
+| `options.tileSize`        | `number`   | `256`          | 瓦片尺寸 (px)                             |
+| `options.minZoom`         | `number`   | `8`            | 最小缩放级别 (Z轴)                        |
+| `options.tileExt`         | `string`   | `png`          | 输出瓦片格式 (`png`, `jpg`, `webp`) |
+| `options.quality`         | `number`   | `80`           | 输出质量 (0-100)，PNG 忽略此项            |
+| `options.concurrency`     | `number`   | `CPU核数`      | 并发处理任务数                            |
+| `options.sharpPixelLimit` | `number`   | `1e9`          | Sharp 库像素限制防止内存溢出              |
+| `options.onTick`          | `function` | -                | 每完成一个 Zoom 层级的回调                |
 
 **输出目录结构示例：**
 
 ```text
 output/
-├── 0/
-│   └── 0/
-│       └── 0.png
-├── 1/
-│   ├── 0/
-│   │   ├── 0.png
-│   │   └── 1.png
-│   └── 1/
-│       ├── 0.png
-│       └── 1.png
+├── 8/
+│   └── 127/
+│       └── 127.png
+├── 9/
+│   ├── 254/
+│   │   ├── 254.png
+│   │   └── 255.png
+│   └── 255/
+│       ├── 254.png
+│       └── 255.png
 ...
 ```
 
@@ -169,19 +169,19 @@ async function main() {
 
 #### 参数说明
 
-| 参数 | 类型 | 默认值 | 描述 |
-| :-- | :-- | :-- | :-- |
-| `options.imagesPath` | `string` | **(必填)** | 包含源图片的文件夹路径 |
-| `options.outputPath` | `string` | `./merged_image.png` | 输出文件路径 |
-| `options.cols` | `number` | `64` | 网格列数 |
-| `options.rows` | `number` | `64` | 网格行数 |
-| `options.imageWidth` | `number` | `256` | 单张图片宽度 |
-| `options.imageHeight` | `number` | `256` | 单张图片高度 |
-| `options.imagePattern` | `string` | `{x}_{y}.png` | 文件名模板，支持 `{x}` 和 `{y}` 占位符 |
-| `options.direction` | `string` | [horizontal] (行优先), [vertical] (列优先) |
-| `options.outputFormat` | `string` | `png` | 输出格式: `png`, `jpg`, `webp` |
-| `options.quality` | `number` | `80` | 输出质量 (针对 jpg/webp) |
-| `options.onTick` | `function` | - | 进度回调 |
+| 参数                     | 类型         | 默认值                                     | 描述                                      |
+| :----------------------- | :----------- | :----------------------------------------- | :---------------------------------------- |
+| `options.imagesPath`   | `string`   | **(必填)**                           | 包含源图片的文件夹路径                    |
+| `options.outputPath`   | `string`   | `./merged_image.png`                     | 输出文件路径                              |
+| `options.cols`         | `number`   | `64`                                     | 网格列数                                  |
+| `options.rows`         | `number`   | `64`                                     | 网格行数                                  |
+| `options.imageWidth`   | `number`   | `256`                                    | 单张图片宽度                              |
+| `options.imageHeight`  | `number`   | `256`                                    | 单张图片高度                              |
+| `options.imagePattern` | `string`   | `{x}_{y}.png`                            | 文件名模板，支持`{x}` 和 `{y}` 占位符 |
+| `options.direction`    | `string`   | [horizontal] (行优先), [vertical] (列优先) |                                           |
+| `options.outputFormat` | `string`   | `png`                                    | 输出格式:`png`, `jpg`, `webp`       |
+| `options.quality`      | `number`   | `80`                                     | 输出质量 (针对 jpg/webp)                  |
+| `options.onTick`       | `function` | -                                          | 进度回调                                  |
 
 ## 注意事项
 

@@ -1,4 +1,4 @@
-import type { MapData } from './type';
+import type { Group, MapData } from './type';
 
 import ExcelJS from 'exceljs';
 
@@ -8,9 +8,7 @@ import { readJSON, writeJSON } from '../fs';
  * 处理地图数据并保存到文件
  */
 export async function genMapData(options: any) {
-  const defaultOptions = {
-    outputPath: './mapData.json',
-  };
+  const defaultOptions = {};
 
   const mergeOptions = { ...defaultOptions, ...options };
 
@@ -19,7 +17,7 @@ export async function genMapData(options: any) {
   // 读取原始数据
   const regions = mapInfo.regions.map((item: any, index: number) => {
     return {
-      id: index,
+      id: index + 1,
       title: item.title,
       visibleZoom: '8,9,10,11,12,13',
       centerX: Number.parseFloat(item.center_x),
@@ -27,17 +25,18 @@ export async function genMapData(options: any) {
     };
   });
   const categoryMap: Record<number, any> = {};
-  let categoryIdCounter = 0;
+  let categoryIdCounter = 1;
 
   const groups = mapInfo.groups.map((item: any, index: number) => {
+    const groupId = index + 1;
     return {
-      id: index,
+      id: groupId,
       title: item.title,
       color: item.color,
       categories: item.categories.map((cate: any) => {
         const res = {
           id: categoryIdCounter++,
-          groupId: index,
+          groupId,
           title: cate.title,
           icon: cate.icon,
           locationsCount: cate.locations_count,
@@ -51,7 +50,7 @@ export async function genMapData(options: any) {
   const locations = mapInfo.locations.map((item: any, index: number) => {
     const category = categoryMap[item.category_id];
     return {
-      id: index,
+      id: index + 1,
       title: item.title,
       icon: category.icon,
       longitude: item.longitude,
@@ -80,11 +79,8 @@ export async function genMapData(options: any) {
     locations,
   };
 
-  // 保存结果
-  await writeJSON(mergeOptions.outputPath, mapData);
-
   return {
-    outputPath: mergeOptions.outputPath,
+    mapData,
   };
 }
 
@@ -126,9 +122,7 @@ export async function writeMapDataExcel(options: MapDataToExcelOptions) {
 
   const mergeOptions = { ...defaultOptions, ...options };
 
-  const pointData = await readJSON<any[]>(
-    mergeOptions.inputPath,
-  );
+  const mapData = await readJSON<MapData>(mergeOptions.inputPath);
 
   // 创建工作簿和工作表
   const workbook = new ExcelJS.Workbook();
@@ -150,15 +144,15 @@ export async function writeMapDataExcel(options: MapDataToExcelOptions) {
 
   // 定义列标题和宽度（先不设置对齐）
   const columns: Partial<ExcelJS.Column>[] = [
-    { header: '分组id', key: 'groupId', width: 10 },
-    { header: '分组名称en', key: 'groupNameEn', width: 15 },
-    { header: '分组名称zh', key: 'groupNameZh', width: 15 },
-    { header: '分类id', key: 'categoryId', width: 10 },
-    { header: '分类名称en', key: 'categoryNameEn', width: 20 },
-    { header: '分类名称zh', key: 'categoryNameZh', width: 20 },
-    { header: '点位ID', key: 'pointId', width: 10 },
-    { header: '点位名称en', key: 'pointNameEn', width: 30 },
-    { header: '点位名称zh', key: 'pointNameZh', width: 30 },
+    { header: '分组ID', key: 'groupId', width: 10 },
+    { header: '分组名称', key: 'groupTitle', width: 15 },
+    { header: '分组名称(译)', key: 'groupTitleTran', width: 20 },
+    { header: '分类ID', key: 'categoryId', width: 10 },
+    { header: '分类名称', key: 'categoryTitle', width: 20 },
+    { header: '分类名称(译)', key: 'categoryTitleTran', width: 20 },
+    { header: '点位ID', key: 'locationId', width: 10 },
+    { header: '点位名称', key: 'locationTitle', width: 30 },
+    { header: '点位名称(译)', key: 'locationTitleTran', width: 30 },
   ];
   worksheet.columns = columns;
 
@@ -179,29 +173,31 @@ export async function writeMapDataExcel(options: MapDataToExcelOptions) {
     cell.alignment = { horizontal: 'center', vertical: 'middle' };
   });
 
-  pointData.forEach((group) => {
-    group.data.forEach((category: any) => {
-      category.data.forEach((point: any) => {
-        const newRow = worksheet.addRow({
-          groupId: group.id,
-          groupNameEn: group.title,
-          groupNameZh: '',
-          categoryId: category.id,
-          categoryNameEn: category.title,
-          categoryNameZh: '',
-          pointId: point.id,
-          pointNameEn: point.title,
-          pointNameZh: '',
-        });
+  const groupsMap: Record<number, Group> = {};
 
-        // 遍历当前行所有单元格，设置样式
-        newRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
-          // ID列（A、D、G列）：水平+垂直居中
-          cell.alignment = [1, 4, 7].includes(colNumber)
-            ? centerAlignment
-            : { vertical: 'middle' };
-        });
-      });
+  mapData.groups.forEach((group) => {
+    groupsMap[group.id] = group;
+  });
+
+  mapData.locations.forEach((location) => {
+    const newRow = worksheet.addRow({
+      groupId: location.category.groupId,
+      groupTitle: groupsMap[location.category.groupId]?.title,
+      groupTitleTran: '',
+      categoryId: location.category.id,
+      categoryTitle: location.category.title,
+      categoryTitleTran: '',
+      locationId: location.id,
+      locationTitle: location.title,
+      locationTitleTran: '',
+    });
+
+    // 遍历当前行所有单元格，设置样式
+    newRow.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+      // ID列（A、D、G列）：水平+垂直居中
+      cell.alignment = [1, 4, 7].includes(colNumber)
+        ? centerAlignment
+        : { vertical: 'middle' };
     });
   });
 
@@ -249,16 +245,14 @@ export interface ExcelToMapDataOptions {
  */
 export async function readMapDataExcel(options: ExcelToMapDataOptions) {
   const defaultOptions = {
-    inputPath: './points.json',
-    inputExcelPath: './newPoints.xlsx',
-    outputPath: './newPoints.json',
+    inputPath: './mapData.json',
+    inputExcelPath: './newMapData.xlsx',
+    outputPath: './newMapData.json',
     worksheetName: 'Sheet1',
   };
   const mergeOptions = { ...defaultOptions, ...options };
 
-  const pointData: any[] = await readJSON<
-    any[]
-  >(mergeOptions.inputPath);
+  const mapData = await readJSON<MapData>(mergeOptions.inputPath);
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(mergeOptions.inputExcelPath);
 
@@ -269,20 +263,20 @@ export async function readMapDataExcel(options: ExcelToMapDataOptions) {
 
   // 定义列配置（与Excel列对应）
   const columns: Partial<ExcelJS.Column>[] = [
-    { header: '分组id', key: 'groupId', width: 10 },
-    { header: '分组名称en', key: 'groupNameEn', width: 15 },
-    { header: '分组名称zh', key: 'groupNameZh', width: 15 },
-    { header: '分类id', key: 'categoryId', width: 10 },
-    { header: '分类名称en', key: 'categoryNameEn', width: 20 },
-    { header: '分类名称zh', key: 'categoryNameZh', width: 20 },
-    { header: '点位ID', key: 'pointId', width: 10 },
-    { header: '点位名称en', key: 'pointNameEn', width: 30 },
-    { header: '点位名称zh', key: 'pointNameZh', width: 30 },
+    { header: '分组ID', key: 'groupId', width: 10 },
+    { header: '分组名称', key: 'groupTitle', width: 15 },
+    { header: '分组名称(译)', key: 'groupTitleTran', width: 20 },
+    { header: '分类ID', key: 'categoryId', width: 10 },
+    { header: '分类名称', key: 'categoryTitle', width: 20 },
+    { header: '分类名称(译)', key: 'categoryTitleTran', width: 20 },
+    { header: '点位ID', key: 'locationId', width: 10 },
+    { header: '点位名称', key: 'locationTitle', width: 30 },
+    { header: '点位名称(译)', key: 'locationTitleTran', width: 30 },
   ];
 
-  const groupMap: any = {};
-  const categoryMap: any = {};
-  const pointMap: any = {};
+  const groupMap: Record<string, string> = {};
+  const categoryMap: Record<string, string> = {};
+  const locationMap: Record<string, string> = {};
 
   worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
     if (rowNumber === 1) return; // 跳过表头行
@@ -294,43 +288,42 @@ export async function readMapDataExcel(options: ExcelToMapDataOptions) {
       const cell = row.getCell(index + 1);
       const key = col.key;
       if (key) {
-        rowData[key] = cell.value || ''; // 空值处理为空字符串
+        rowData[key] = cell.value ?? ''; // 空值处理为空字符串
       }
     });
 
     // 构建分组映射
-    const groupId = Number.parseInt(rowData?.groupId);
-    if (groupId) {
-      groupMap[groupId] = rowData.groupNameZh;
+    if (rowData.groupTitleTran && !groupMap[rowData.groupId]) {
+      groupMap[rowData.groupId] = rowData.groupTitleTran;
     }
 
     // 构建分类映射
-    const categoryId = Number.parseInt(rowData?.categoryId);
-    if (categoryId) {
-      categoryMap[categoryId] = rowData.categoryNameZh;
+    if (rowData.categoryTitleTran && !categoryMap[rowData.categoryId]) {
+      categoryMap[rowData.categoryId] = rowData.categoryTitleTran;
     }
 
     // 构建点位映射
-    const pointId = Number.parseInt(rowData?.pointId);
-    if (pointId) {
-      pointMap[pointId] = rowData.pointNameZh;
+    if (rowData.locationTitleTran && !locationMap[rowData.locationId]) {
+      locationMap[rowData.locationId] = rowData.locationTitleTran;
     }
   });
 
-  pointData.forEach((group) => {
-    group.title = groupMap[group.id];
-    group.data.forEach((category: any) => {
-      category.title = categoryMap[category.id];
-      category.data.forEach((point: any) => {
-        point.title = pointMap[point.id];
-      });
+  mapData.groups.forEach((group) => {
+    group.title = groupMap[group.id] || group.title;
+    group.categories.forEach((category) => {
+      category.title = categoryMap[category.id] || category.title;
     });
   });
 
-  await writeJSON(mergeOptions.outputPath, pointData);
+  mapData.locations.forEach((location) => {
+    location.title = locationMap[location.id] || location.title;
+    location.category.title =
+      categoryMap[location.category.id] || location.category.title;
+  });
+
+  await writeJSON(mergeOptions.outputPath, mapData);
 
   return {
     outputPath: mergeOptions.outputPath,
-    points: pointData,
   };
 }

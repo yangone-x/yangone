@@ -6,7 +6,7 @@ import { intro, log, outro } from '@clack/prompts';
 import chalk from 'chalk';
 import { merge } from 'lodash-es';
 
-import { readJSON } from '../fs';
+import { readJSON, writeJSON } from '../fs';
 import logger from '../logger';
 import { gamerSky, genImageUrls } from '../map';
 import { fetchImagesCli } from './fetchImage';
@@ -120,12 +120,13 @@ async function run(options: GamerSkyOptions) {
 
     if (options?.mapData && options.mapData?.enabled !== false) {
       intro(chalk.bold(`🚀 开始生成地图数据文件...`));
+      const outputPath = getPathWithBase(mergeOptions.mapData.outputPath);
       const res = await gamerSky.genMapData({
         ...mergeOptions.mapData,
         mapInfo,
-        outputPath: getPathWithBase(mergeOptions.mapData.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
+      await writeJSON(outputPath, res.mapData);
+      outro(chalk(`📂 文件保存位置: ${path.resolve(outputPath)}`));
     }
   } catch (error: any) {
     log.error(error.message);

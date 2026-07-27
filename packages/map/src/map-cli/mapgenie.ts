@@ -6,7 +6,7 @@ import { intro, log, outro } from '@clack/prompts';
 import chalk from 'chalk';
 import { merge } from 'lodash-es';
 
-import { readJSON } from '../fs';
+import { readJSON, writeJSON } from '../fs';
 import logger from '../logger';
 import { genImageUrls, mapgenie } from '../map';
 import { fetchImagesCli } from './fetchImage';
@@ -111,17 +111,17 @@ async function run(options: MapgenieOptions) {
 
     if (options?.mapData && options.mapData?.enabled !== false) {
       intro(chalk.bold(`🚀 开始生成地图数据文件...`));
+      const outputPath = getPathWithBase(mergeOptions.mapData.outputPath);
       const res = await mapgenie.genMapData({
         ...mergeOptions.mapData,
-        gameUrl: path.basename(mergeOptions.basePath),
         mapInfo,
-        outputPath: getPathWithBase(mergeOptions.mapData.outputPath),
       });
-      outro(chalk(`📂 文件保存位置: ${path.resolve(res.outputPath)}`));
+      await writeJSON(outputPath, res.mapData);
+      outro(chalk(`📂 文件保存位置: ${path.resolve(outputPath)}`));
     }
 
     if (options.pointsToExcel && options.pointsToExcel?.enabled !== false) {
-      intro(chalk.bold(`🚀 开始根据地标生成地标数据表格文件...`));
+      intro(chalk.bold(`🚀 开始生成地图数据 => 表格...`));
       const exRes = await mapgenie.writeMapDataExcel({
         ...mergeOptions.pointsToExcel,
         inputPath: getPathWithBase(mergeOptions.pointsToExcel.inputPath),
@@ -131,7 +131,7 @@ async function run(options: MapgenieOptions) {
     }
 
     if (options?.excelToPoints && options.excelToPoints?.enabled !== false) {
-      intro(chalk.bold(`🚀 开始根据数据表格文件生成地标数据...`));
+      intro(chalk.bold(`🚀 开始生成地图表格 => 数据...`));
       const exRes = await mapgenie.readMapDataExcel({
         ...mergeOptions.excelToPoints,
         inputPath: getPathWithBase(mergeOptions.excelToPoints.inputPath),

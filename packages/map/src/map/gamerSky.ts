@@ -1,7 +1,5 @@
 import type { MapData } from './type';
 
-import fs from 'node:fs';
-
 /**
  * 获取图标图片地址列表
  */
@@ -22,7 +20,6 @@ export function getIconUrls(mapInfo: any): [string, string][] {
  */
 export async function genMapData(options: any) {
   const defaultOptions = {
-    outputPath: './mapData.json',
     iconUrlTemplate: '/{index}.png',
   };
 
@@ -33,7 +30,7 @@ export async function genMapData(options: any) {
 
   const regions = mapInfo.gameMapAreas.map((item: any, index: number) => {
     return {
-      id: index,
+      id: index + 1,
       title: item.name,
       visibleZoom: item.visibleMapZoom,
       centerX: item.x,
@@ -41,21 +38,27 @@ export async function genMapData(options: any) {
     };
   });
   const categoryMap: Record<number, any> = {};
+  let categoryIdCounter = 1;
 
   const groups = mapInfo.landmarkCatalogGroups.map(
     (item: any, index: number) => {
+      const groupId = index + 1;
       return {
-        id: index,
+        id: groupId,
         title: item.groupName,
-        categories: item.landmarkCatalogs.map((cate: any, cateIdx: number) => {
+        categories: item.landmarkCatalogs.map((cate: any) => {
           const res = {
-            id: cateIdx,
-            groupId: index,
+            id: categoryIdCounter,
+            groupId,
             title: cate.name,
-            icon: mergeOptions.iconUrlTemplate.replace('{index}', cateIdx),
+            icon: mergeOptions.iconUrlTemplate.replace(
+              '{index}',
+              categoryIdCounter,
+            ),
             locationsCount: cate.landmarksCount,
           };
           categoryMap[cate.id] = res;
+          categoryIdCounter++;
           return res;
         }),
       };
@@ -65,7 +68,7 @@ export async function genMapData(options: any) {
   const locations = mapInfo.landmarks.map((item: any, index: number) => {
     const category = categoryMap[item.landmarkCatalogId];
     return {
-      id: index,
+      id: index + 1,
       title: item.name,
       icon: category.icon,
       longitude: item.x,
@@ -78,10 +81,10 @@ export async function genMapData(options: any) {
   const mapData: MapData = {
     map: {
       id: mapInfo.id,
-      title: mapInfo.guideContent,
+      title: mapInfo.name,
     },
     mapConfig: {
-      tileSize: mapInfo.mapTileSize,
+      tileSize: mapInfo.mapTileSize || 256,
       tileMinZoom: mapInfo.mapTileZoomMin,
       tileMaxZoom: mapInfo.mapTileZoomMax,
       tileUrlsRoot: '/maps/{z}/{x}/{y}.png',
@@ -94,9 +97,7 @@ export async function genMapData(options: any) {
     locations,
   };
 
-  fs.writeFileSync(mergeOptions.outputPath, JSON.stringify(mapData, null, 2));
-
   return {
-    outputPath: mergeOptions.outputPath,
+    mapData,
   };
 }
