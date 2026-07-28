@@ -8,7 +8,7 @@ import { readJSON, writeJSON } from '../fs';
  * 处理地图数据并保存到文件
  */
 export async function genMapData(options: any) {
-  const defaultOptions = {};
+  const defaultOptions = { iconUrlTemplate: '{value}' };
 
   const mergeOptions = { ...defaultOptions, ...options };
 
@@ -38,7 +38,7 @@ export async function genMapData(options: any) {
           id: categoryIdCounter++,
           groupId,
           title: cate.title,
-          icon: cate.icon,
+          icon: mergeOptions.iconUrlTemplate.replace('{value}', cate.icon),
           locationsCount: cate.locations_count,
         };
         categoryMap[cate.id] = res;

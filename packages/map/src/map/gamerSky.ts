@@ -20,7 +20,7 @@ export function getIconUrls(mapInfo: any): [string, string][] {
  */
 export async function genMapData(options: any) {
   const defaultOptions = {
-    iconUrlTemplate: '/{index}.png',
+    iconUrlTemplate: '{value}',
   };
 
   const mergeOptions = { ...defaultOptions, ...options };
@@ -52,7 +52,7 @@ export async function genMapData(options: any) {
             groupId,
             title: cate.name,
             icon: mergeOptions.iconUrlTemplate.replace(
-              '{index}',
+              '{value}',
               categoryIdCounter,
             ),
             locationsCount: cate.landmarksCount,

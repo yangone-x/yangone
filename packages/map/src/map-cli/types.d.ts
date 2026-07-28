@@ -33,7 +33,8 @@ interface CommonOptions {
     enabled?: boolean;
     /**
      * 图标模板
-     * @default '/{index}.png'
+     * @default '{value}'
+     * @example 'https://xxxxxxx/icon_{value}.png'
      */
     iconUrlTemplate?: string;
     /**
