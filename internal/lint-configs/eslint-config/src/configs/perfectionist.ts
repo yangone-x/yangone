@@ -24,13 +24,13 @@ export async function perfectionist(): Promise<Linter.Config[]> {
             customGroups: [
               {
                 selector: 'type',
-                groupName: 'yangone-core-type',
-                elementNamePattern: '^@yangone-core/.+',
+                groupName: 'vben-core-type',
+                elementNamePattern: '^@vben-core/.+',
               },
               {
                 selector: 'type',
-                groupName: 'yangone-type',
-                elementNamePattern: '^@yangone/.+',
+                groupName: 'vben-type',
+                elementNamePattern: '^@vben/.+',
               },
               {
                 selector: 'type',
@@ -38,12 +38,12 @@ export async function perfectionist(): Promise<Linter.Config[]> {
                 elementNamePattern: ['^vue$', '^vue-.+', '^@vue/.+'],
               },
               {
-                groupName: 'yangone',
-                elementNamePattern: '^@yangone/.+',
+                groupName: 'vben',
+                elementNamePattern: '^@vben/.+',
               },
               {
-                groupName: 'yangone-core',
-                elementNamePattern: '^@yangone-core/.+',
+                groupName: 'vben-core',
+                elementNamePattern: '^@vben-core/.+',
               },
               {
                 groupName: 'vue',
@@ -54,14 +54,14 @@ export async function perfectionist(): Promise<Linter.Config[]> {
             groups: [
               ['type-external', 'type-builtin', 'type-import'],
               'vue-type',
-              'yangone-type',
-              'yangone-core-type',
+              'vben-type',
+              'vben-core-type',
               ['type-parent', 'type-sibling', 'type-index'],
               ['type-internal'],
               'value-builtin',
               'vue',
-              'yangone',
-              'yangone-core',
+              'vben',
+              'vben-core',
               'value-external',
               'value-internal',
               ['value-parent', 'value-sibling', 'value-index'],
