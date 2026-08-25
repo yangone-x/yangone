@@ -3,7 +3,7 @@
   "version": "0.2",
   "language": "en,en-US",
   "allowCompoundWords": true,
-  "words": [],
+  "words": ["yangdv"],
   "ignorePaths": [
     "**/*-dist/**",
     "**/*.log",

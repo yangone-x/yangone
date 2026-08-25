@@ -33,6 +33,10 @@
       "path": "packages/map"
     },
     {
+      "name": "yangdv",
+      "path": "packages/yangdv"
+    },
+    {
       "name": "@yangone/turbo-run",
       "path": "scripts/turbo-run"
     },

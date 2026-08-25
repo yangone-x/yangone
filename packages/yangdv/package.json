@@ -1,0 +1,131 @@
+{
+  "name": "yangdv",
+  "version": "0.0.1",
+  "description": "Yang Design Vue3 Component Library",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangone-x/yangone.git",
+    "directory": "packages/yangdv"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "build": "run-s build:esm build:vite:parallel build:verify",
+    "build:verify": "tsx ./scripts/verify-browser-bundle.ts",
+    "build:esm": "tsdown",
+    "build:vite:parallel": "run-p build:umd build:full-esm",
+    "build:full-esm": "vite build --config ./vite.esm.config.ts",
+    "build:umd": "vite build",
+    "prepublish": "pnpm build",
+    "bump": "bumpp --commit \"chore(release): yangdv %s\" --push --tag \"yangdv@%s\""
+  },
+  "files": [
+    "README.md",
+    "dist",
+    "global.d.ts",
+    "package.json"
+  ],
+  "sideEffects": [],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./version/token.json": "./dist/version/token.json",
+    "./version/token-meta.json": "./dist/version/token-meta.json",
+    "./dist/version/token.json": "./dist/version/token.json",
+    "./dist/version/token-meta.json": "./dist/version/token-meta.json",
+    "./dist/*": {
+      "types": [
+        "./dist/*.d.ts",
+        "./dist/*/index.d.ts"
+      ],
+      "import": [
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ],
+      "default": [
+        "./dist/*.js",
+        "./dist/*/index.js"
+      ]
+    },
+    "./global.d.ts": "./global.d.ts",
+    "./global": "./global.d.ts",
+    "./package.json": "./package.json"
+  },
+  "contributes": {
+    "html": {
+      "customData": [
+        "./web-tags.json"
+      ]
+    }
+  },
+  "dependencies": {
+    "@v-c/async-validator": "catalog:vc",
+    "@v-c/cascader": "catalog:vc",
+    "@v-c/checkbox": "catalog:vc",
+    "@v-c/collapse": "catalog:vc",
+    "@v-c/color-picker": "catalog:vc",
+    "@v-c/dialog": "catalog:vc",
+    "@v-c/drawer": "catalog:vc",
+    "@v-c/dropdown": "catalog:vc",
+    "@v-c/image": "catalog:vc",
+    "@v-c/input": "catalog:vc",
+    "@v-c/input-number": "catalog:vc",
+    "@v-c/listy": "catalog:vc",
+    "@v-c/mentions": "catalog:vc",
+    "@v-c/menu": "catalog:vc",
+    "@v-c/mutate-observer": "catalog:vc",
+    "@v-c/notification": "catalog:vc",
+    "@v-c/pagination": "catalog:vc",
+    "@v-c/picker": "catalog:vc",
+    "@v-c/progress": "catalog:vc",
+    "@v-c/qrcode": "catalog:vc",
+    "@v-c/rate": "catalog:vc",
+    "@v-c/resize-observer": "catalog:vc",
+    "@v-c/segmented": "catalog:vc",
+    "@v-c/select": "catalog:vc",
+    "@v-c/slick": "catalog:vc",
+    "@v-c/slider": "catalog:vc",
+    "@v-c/steps": "catalog:vc",
+    "@v-c/switch": "catalog:vc",
+    "@v-c/table": "catalog:vc",
+    "@v-c/tabs": "catalog:vc",
+    "@v-c/textarea": "catalog:vc",
+    "@v-c/tooltip": "catalog:vc",
+    "@v-c/tour": "catalog:vc",
+    "@v-c/tree": "catalog:vc",
+    "@v-c/tree-select": "catalog:vc",
+    "@v-c/trigger": "catalog:vc",
+    "@v-c/upload": "catalog:vc",
+    "@v-c/util": "catalog:vc",
+    "@v-c/virtual-list": "catalog:vc",
+    "@vueuse/core": "catalog:prod",
+    "dayjs": "catalog:",
+    "es-toolkit": "catalog:prod",
+    "scroll-into-view-if-needed": "catalog:prod",
+    "throttle-debounce": "catalog:prod",
+    "vue": "catalog:prod"
+  },
+  "devDependencies": {
+    "@types/throttle-debounce": "catalog:types",
+    "@v-c/portal": "catalog:vc",
+    "@vitejs/plugin-vue": "catalog:",
+    "@vitejs/plugin-vue-jsx": "catalog:",
+    "csstype": "catalog:prod",
+    "vite-plugin-dayjs": "catalog:dev",
+    "vite-plugin-inspect": "catalog:dev",
+    "vite-plugin-tsx-resolve-types": "catalog:dev"
+  },
+  "web-types": "web-types.json",
+  "browserslist": [
+    "> 1%",
+    "not ie 11",
+    "not op_mini all"
+  ]
+}

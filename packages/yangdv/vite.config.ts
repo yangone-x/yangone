@@ -1,0 +1,47 @@
+import vue from '@vitejs/plugin-vue'
+import vueJsx from '@vitejs/plugin-vue-jsx'
+import { defineConfig } from 'vite'
+import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types'
+
+export default defineConfig({
+  plugins: [
+    tsxResolveTypes({
+      defaultPropsToUndefined: ['Boolean'],
+    }),
+    vue(),
+    vueJsx(),
+  ],
+  // Browser-facing bundle: replace `process.env.NODE_ENV` so the output does
+  // not reference the missing `process` global in the browser (#666).
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
+  build: {
+    rolldownOptions: {
+      external: [
+        'vue',
+        /^dayjs/,
+      ],
+      output: {
+        exports: 'named',
+        globals: {
+          'vue': 'Vue',
+          'dayjs': 'dayjs',
+          'dayjs/plugin/advancedFormat': 'dayjs_plugin_advancedFormat',
+          'dayjs/plugin/customParseFormat': 'dayjs_plugin_customParseFormat',
+          'dayjs/plugin/localeData': 'dayjs_plugin_localeData',
+          'dayjs/plugin/weekday': 'dayjs_plugin_weekday',
+          'dayjs/plugin/weekOfYear': 'dayjs_plugin_weekOfYear',
+          'dayjs/plugin/weekYear': 'dayjs_plugin_weekYear',
+        },
+      },
+    },
+    emptyOutDir: false,
+    lib: {
+      entry: 'src/index.ts',
+      name: 'yangdv',
+      fileName: () => 'yangdv.js',
+      formats: ['umd'],
+    },
+  },
+})

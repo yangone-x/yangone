@@ -53,6 +53,6 @@
     "sharp": "catalog:"
   },
   "devDependencies": {
-    "@types/lodash-es": "catalog:"
+    "@types/lodash-es": "catalog:types"
   }
 }

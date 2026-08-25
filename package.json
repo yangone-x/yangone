@@ -18,6 +18,7 @@
     "build:analyze": "turbo build:analyze",
     "build:docker": "./scripts/deploy/build-local-docker-image.sh",
     "build:play": "pnpm run build --filter=@yangone/playground",
+    "build:yangdv": "pnpm -F yangdv build",
     "changeset": "pnpm exec changeset",
     "check": "pnpm run check:circular && pnpm run check:dep && pnpm run check:type && pnpm check:cspell",
     "check:circular": "vsh check-circular",
@@ -42,12 +43,15 @@
     "version": "pnpm exec changeset version && pnpm install --no-frozen-lockfile",
     "catalog": "pnpx codemod pnpm/catalog"
   },
+  "dependencies": {
+    "vue": "catalog:prod"
+  },
   "devDependencies": {
     "@changesets/changelog-github": "catalog:",
     "@changesets/cli": "catalog:",
     "@playwright/test": "catalog:",
     "@tsdown/css": "catalog:",
-    "@types/node": "catalog:",
+    "@types/node": "catalog:types",
     "@vitejs/plugin-vue": "catalog:",
     "@vitejs/plugin-vue-jsx": "catalog:",
     "@vue/test-utils": "catalog:",
@@ -66,6 +70,7 @@
     "is-ci": "catalog:",
     "lefthook": "catalog:",
     "lightningcss": "catalog:",
+    "npm-run-all": "catalog:dev",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
@@ -73,12 +78,13 @@
     "rimraf": "catalog:",
     "tailwindcss": "catalog:",
     "tsdown": "catalog:",
+    "tsx": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
     "unplugin-vue": "catalog:",
-    "vite": "catalog:",
-    "vitest": "catalog:",
-    "vue": "catalog:",
+    "vite": "catalog:dev",
+    "vite-plugin-tsx-resolve-types": "catalog:dev",
+    "vitest": "catalog:dev",
     "vue-tsc": "catalog:"
   },
   "engines": {
