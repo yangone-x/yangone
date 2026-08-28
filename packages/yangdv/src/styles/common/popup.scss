@@ -1,0 +1,48 @@
+@use '../mixins/mixins' as *;
+
+:root {
+  --popup-modal-bg-color: var(--color-black);
+  --popup-modal-opacity: 0.5;
+}
+
+.v-modal-enter {
+  animation: v-modal-in var(--transition-duration-fast) ease;
+}
+
+.v-modal-leave {
+  animation: v-modal-out var(--transition-duration-fast) ease forwards;
+}
+
+@keyframes v-modal-in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+  }
+}
+
+@keyframes v-modal-out {
+  0% {
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.v-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--popup-modal-bg-color);
+  opacity: var(--popup-modal-opacity);
+}
+
+@include b(popup-parent) {
+  @include m(hidden) {
+    overflow: hidden;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@yangone/playground",
+  "private": true,
+  "homepage": "https://github.com/yangone-x/fx-monorepo",
+  "bugs": "https://github.com/yangone-x/fx-monorepo/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangone-x/fx-monorepo.git",
+    "directory": "playground"
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "nuxt": "catalog:prod",
+    "vue": "catalog:prod",
+    "vue-router": "catalog:prod",
+    "yangdv": "workspace:*"
+  }
+}

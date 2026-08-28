@@ -17,8 +17,7 @@
     "build:vite:parallel": "run-p build:umd build:full-esm",
     "build:full-esm": "vite build --config ./vite.esm.config.ts",
     "build:umd": "vite build",
-    "prepublish": "pnpm build",
-    "bump": "bumpp --commit \"chore(release): yangdv %s\" --push --tag \"yangdv@%s\""
+    "prepublish": "pnpm build"
   },
   "files": [
     "README.md",
@@ -26,7 +25,9 @@
     "global.d.ts",
     "package.json"
   ],
-  "sideEffects": [],
+  "sideEffects": [
+    "./dist/reset.css"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -36,10 +37,44 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./version/token.json": "./dist/version/token.json",
-    "./version/token-meta.json": "./dist/version/token-meta.json",
-    "./dist/version/token.json": "./dist/version/token.json",
-    "./dist/version/token-meta.json": "./dist/version/token-meta.json",
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "default": "./dist/utils/index.js"
+    },
+    "./utils/*": {
+      "types": [
+        "./dist/utils/*.d.ts",
+        "./dist/utils/*/index.d.ts"
+      ],
+      "import": [
+        "./dist/utils/*.js",
+        "./dist/utils/*/index.js"
+      ],
+      "default": [
+        "./dist/utils/*.js",
+        "./dist/utils/*/index.js"
+      ]
+    },
+    "./hooks": {
+      "types": "./dist/hooks/index.d.ts",
+      "import": "./dist/hooks/index.js",
+      "default": "./dist/hooks/index.js"
+    },
+    "./hooks/*": {
+      "types": [
+        "./dist/hooks/*.d.ts",
+        "./dist/hooks/*/index.d.ts"
+      ],
+      "import": [
+        "./dist/hooks/*.js",
+        "./dist/hooks/*/index.js"
+      ],
+      "default": [
+        "./dist/hooks/*.js",
+        "./dist/hooks/*/index.js"
+      ]
+    },
     "./dist/*": {
       "types": [
         "./dist/*.d.ts",
@@ -54,8 +89,7 @@
         "./dist/*/index.js"
       ]
     },
-    "./global.d.ts": "./global.d.ts",
-    "./global": "./global.d.ts",
+    "./dist/reset.css": "./dist/reset.css",
     "./package.json": "./package.json"
   },
   "contributes": {
@@ -66,55 +100,16 @@
     }
   },
   "dependencies": {
-    "@v-c/async-validator": "catalog:vc",
-    "@v-c/cascader": "catalog:vc",
-    "@v-c/checkbox": "catalog:vc",
-    "@v-c/collapse": "catalog:vc",
-    "@v-c/color-picker": "catalog:vc",
-    "@v-c/dialog": "catalog:vc",
-    "@v-c/drawer": "catalog:vc",
-    "@v-c/dropdown": "catalog:vc",
-    "@v-c/image": "catalog:vc",
-    "@v-c/input": "catalog:vc",
-    "@v-c/input-number": "catalog:vc",
-    "@v-c/listy": "catalog:vc",
-    "@v-c/mentions": "catalog:vc",
-    "@v-c/menu": "catalog:vc",
-    "@v-c/mutate-observer": "catalog:vc",
-    "@v-c/notification": "catalog:vc",
-    "@v-c/pagination": "catalog:vc",
-    "@v-c/picker": "catalog:vc",
-    "@v-c/progress": "catalog:vc",
-    "@v-c/qrcode": "catalog:vc",
-    "@v-c/rate": "catalog:vc",
-    "@v-c/resize-observer": "catalog:vc",
-    "@v-c/segmented": "catalog:vc",
-    "@v-c/select": "catalog:vc",
-    "@v-c/slick": "catalog:vc",
-    "@v-c/slider": "catalog:vc",
-    "@v-c/steps": "catalog:vc",
-    "@v-c/switch": "catalog:vc",
-    "@v-c/table": "catalog:vc",
-    "@v-c/tabs": "catalog:vc",
-    "@v-c/textarea": "catalog:vc",
-    "@v-c/tooltip": "catalog:vc",
-    "@v-c/tour": "catalog:vc",
-    "@v-c/tree": "catalog:vc",
-    "@v-c/tree-select": "catalog:vc",
-    "@v-c/trigger": "catalog:vc",
-    "@v-c/upload": "catalog:vc",
-    "@v-c/util": "catalog:vc",
-    "@v-c/virtual-list": "catalog:vc",
+    "@popperjs/core": "catalog:prod",
     "@vueuse/core": "catalog:prod",
     "dayjs": "catalog:",
-    "es-toolkit": "catalog:prod",
-    "scroll-into-view-if-needed": "catalog:prod",
-    "throttle-debounce": "catalog:prod",
+    "defu": "catalog:prod",
+    "lodash-es": "catalog:prod",
     "vue": "catalog:prod"
   },
   "devDependencies": {
-    "@types/throttle-debounce": "catalog:types",
-    "@v-c/portal": "catalog:vc",
+    "@types/lodash-es": "catalog:types",
+    "@types/node": "catalog:types",
     "@vitejs/plugin-vue": "catalog:",
     "@vitejs/plugin-vue-jsx": "catalog:",
     "csstype": "catalog:prod",

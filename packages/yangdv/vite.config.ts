@@ -1,7 +1,7 @@
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import { defineConfig } from 'vite'
-import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types'
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import { defineConfig } from 'vite';
+import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types';
 
 export default defineConfig({
   plugins: [
@@ -18,15 +18,12 @@ export default defineConfig({
   },
   build: {
     rolldownOptions: {
-      external: [
-        'vue',
-        /^dayjs/,
-      ],
+      external: ['vue', /^dayjs/],
       output: {
         exports: 'named',
         globals: {
-          'vue': 'Vue',
-          'dayjs': 'dayjs',
+          vue: 'Vue',
+          dayjs: 'dayjs',
           'dayjs/plugin/advancedFormat': 'dayjs_plugin_advancedFormat',
           'dayjs/plugin/customParseFormat': 'dayjs_plugin_customParseFormat',
           'dayjs/plugin/localeData': 'dayjs_plugin_localeData',
@@ -44,4 +41,4 @@ export default defineConfig({
       formats: ['umd'],
     },
   },
-})
+});

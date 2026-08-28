@@ -37,6 +37,10 @@
       "path": "packages/yangdv"
     },
     {
+      "name": "@yangone/playground",
+      "path": "playground"
+    },
+    {
       "name": "@yangone/turbo-run",
       "path": "scripts/turbo-run"
     },

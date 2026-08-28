@@ -1,0 +1,235 @@
+@use 'function' as *;
+// forward mixins
+@forward 'config';
+@forward 'function';
+
+@use 'config' as *;
+@use 'sass:string';
+@use 'sass:map';
+
+$B: null;
+$E: null;
+
+/// 响应式断点 mixin，根据传入的 key 从断点 Map 中查找对应的媒体查询条件，
+/// 如果存在则生成对应的 @media 规则，不存在则输出警告信息。
+/// @param {String} $key - 断点名称（如 mobile、tablet 等）
+/// @param {Map} $map [$breakpoints] - 断点配置 Map，默认使用全局 $breakpoints
+@mixin res($key, $map: $breakpoints) {
+  // loop breakpoint Map, return if present
+  @if map.has-key($map, $key) {
+    @media only screen and #{string.unquote(map.get($map, $key))} {
+      @content;
+    }
+  }
+
+ @else {
+    @warn 'Undefined points: `#{$map}`';
+  }
+}
+
+/// BEM 命名规范中的 Block mixin，用于生成块级选择器。
+/// 将命名空间、通用分隔符与块名拼接，生成如 `.ns-block` 的选择器，
+/// 同时将块名赋值给全局变量 $B 供后续 e、m 等 mixin 使用。
+/// @param {String} $block - 块名称
+@mixin b($block) {
+  $B: $namespace + $common-separator + $block !global;
+
+  .#{$B} {
+    @content;
+  }
+}
+
+/// BEM 命名规范中的 Element mixin，用于生成元素级选择器。
+/// 将块名 $B 与元素分隔符、元素名拼接，生成如 `.ns-block__element` 的选择器。
+/// 支持传入列表以同时生成多个元素选择器。当父选择器命中特殊嵌套规则时，
+/// 会保留父级嵌套关系，否则直接在根层级生成选择器。
+/// @param {String | List} $element - 元素名称，可为单个或多个
+@mixin e($element) {
+  $E: $element !global;
+  $selector: &;
+  $currentSelector: '';
+
+  @each $unit in $element {
+    $currentSelector: #{$currentSelector + '.' + $B + $element-separator +
+        $unit + ','};
+  }
+
+  @if hitAllSpecialNestRule($selector) {
+    @at-root {
+      #{$selector} {
+        #{$currentSelector} {
+          @content;
+        }
+      }
+    }
+  }
+
+ @else {
+    @at-root {
+      #{$currentSelector} {
+        @content;
+      }
+    }
+  }
+}
+
+/// BEM 命名规范中的 Modifier mixin，用于生成修饰符选择器。
+/// 将当前父选择器与修饰符分隔符、修饰符名拼接，生成如 `.ns-block--modifier` 的选择器。
+/// 支持传入列表以同时生成多个修饰符选择器。
+/// @param {String | List} $modifier - 修饰符名称，可为单个或多个
+@mixin m($modifier) {
+  $selector: &;
+  $currentSelector: '';
+
+  @each $unit in $modifier {
+    $currentSelector: #{$currentSelector + $selector + $modifier-separator +
+        $unit + ','};
+  }
+
+  @at-root {
+    #{$currentSelector} {
+      @content;
+    }
+  }
+}
+
+/// 可配置的修饰符 mixin，用于生成带有可选元素层级的嵌套修饰符选择器。
+/// 当传入 $E-flag 时，会在块名和修饰符之间插入元素层级，
+/// 生成如 `.ns-block__element--modifier` 的嵌套选择器。
+/// @param {String} $modifier - 修饰符名称
+/// @param {String | Boolean} $E-flag [false] - 可选的元素名称，为 false 时不插入元素层级
+@mixin configurable-m($modifier, $E-flag: false) {
+  $selector: &;
+  $interpolation: '';
+
+  @if $E-flag {
+    $interpolation: $element-separator + $E-flag;
+  }
+
+  @at-root {
+    #{$selector} {
+      .#{$B + $interpolation + $modifier-separator + $modifier} {
+        @content;
+      }
+    }
+  }
+}
+
+/// 特殊选择器 mixin，用于生成带有自定义选择器前缀的 BEM 复合选择器。
+/// 将当前选择器、自定义选择器、块名、元素名和可选修饰符组合，
+/// 生成如 `&.spec-selector.ns-block__element--modifier` 的复合选择器。
+/// @param {String} $specSelector [''] - 自定义选择器前缀
+/// @param {String} $element [$E] - 元素名称，默认使用全局 $E
+/// @param {String | Boolean} $modifier [false] - 可选修饰符名称
+/// @param {String} $block [$B] - 块名称，默认使用全局 $B
+@mixin spec-selector(
+  $specSelector: '',
+  $element: $E,
+  $modifier: false,
+  $block: $B
+) {
+  $modifierCombo: '';
+
+  @if $modifier {
+    $modifierCombo: $modifier-separator + $modifier;
+  }
+
+  @at-root {
+    #{&}#{$specSelector}.#{$block + $element-separator + $element +
+      $modifierCombo} {
+      @content;
+    }
+  }
+}
+
+/// Modifier-Element-Block 复合 mixin，用于生成嵌套的 BEM 选择器。
+/// 在当前父选择器下嵌套生成 `.ns-block__element--modifier` 形式的子选择器。
+/// @param {String | Boolean} $modifier [false] - 可选修饰符名称
+/// @param {String} $element [$E] - 元素名称，默认使用全局 $E
+/// @param {String} $block [$B] - 块名称，默认使用全局 $B
+@mixin meb($modifier: false, $element: $E, $block: $B) {
+  $selector: &;
+  $modifierCombo: '';
+
+  @if $modifier {
+    $modifierCombo: $modifier-separator + $modifier;
+  }
+
+  @at-root {
+    #{$selector} {
+      .#{$block + $element-separator + $element + $modifierCombo} {
+        @content;
+      }
+    }
+  }
+}
+
+/// 状态条件 mixin，用于生成状态类名选择器。
+/// 将状态前缀与状态名拼接，生成如 `.is-active` 的状态选择器。
+/// @param {String} $state - 状态名称（如 active、disabled 等）
+@mixin when($state) {
+  @at-root {
+    &.#{$state-prefix + $state} {
+      @content;
+    }
+  }
+}
+
+/// 继承规则 mixin，用于通过 @extend 继承已定义的共享占位符规则。
+/// 引用通过 share-rule 定义的 `%shared-xxx` 占位符选择器。
+/// @param {String} $name - 共享规则名称
+@mixin extend-rule($name) {
+  @extend #{'%shared-' + $name} !optional;
+}
+
+/// 共享规则 mixin，用于定义可被 extend-rule 继承的占位符选择器。
+/// 生成 `%shared-xxx` 形式的占位符，配合 extend-rule 实现样式复用。
+/// @param {String} $name - 共享规则名称
+@mixin share-rule($name) {
+  $rule-name: '%shared-' + $name;
+
+  @at-root #{$rule-name} {
+    @content;
+  }
+}
+
+/// 伪类/伪元素 mixin，用于生成伪类或伪元素选择器。
+/// 将当前选择器与伪类/伪元素拼接，生成如 `&:hover` 的选择器。
+/// @param {String} $pseudo - 伪类或伪元素名称（如 hover、before 等）
+@mixin pseudo($pseudo) {
+  @at-root #{&}#{':#{$pseudo}'} {
+    @content;
+  }
+}
+
+/// Picker 弹出层 mixin，用于统一定义选择器弹出层（popper）的样式。
+/// 设置背景色、边框和阴影，并根据弹出方向自动处理箭头的边框颜色，
+/// 使箭头在对应方向上呈现透明效果，实现视觉上的指向效果。
+/// @param {Color} $background - 背景颜色
+/// @param {List} $border - 边框属性（宽度 样式 颜色）
+/// @param {List} $box-shadow - 阴影属性
+@mixin picker-popper($background, $border, $box-shadow) {
+  &.#{$namespace}-popper {
+    @each $placement,
+      $adjacency
+        in ('top': 'left', 'bottom': 'right', 'left': 'bottom', 'right': 'top')
+    {
+      &[data-popper-placement^='#{$placement}'] {
+        .#{$namespace}-popper__arrow::before {
+          border-#{$placement}-color: transparent;
+          border-#{$adjacency}-color: transparent;
+        }
+      }
+    }
+
+    background: $background;
+    border: $border;
+    box-shadow: $box-shadow;
+
+    .#{$namespace}-popper__arrow {
+      &::before {
+        border: $border;
+      }
+    }
+  }
+}

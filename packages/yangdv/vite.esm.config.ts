@@ -1,7 +1,7 @@
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import { defineConfig } from 'vite'
-import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types'
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import { defineConfig } from 'vite';
+import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types';
 
 export default defineConfig({
   plugins: [
@@ -18,12 +18,10 @@ export default defineConfig({
   },
   build: {
     rolldownOptions: {
-      external: [
-        'vue',
-      ],
+      external: ['vue'],
       output: {
         globals: {
-          'vue': 'vue',
+          vue: 'vue',
         },
       },
     },
@@ -35,4 +33,4 @@ export default defineConfig({
       formats: ['es'],
     },
   },
-})
+});

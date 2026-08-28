@@ -47,7 +47,7 @@
     "chalk": "catalog:",
     "decimal.js": "catalog:",
     "exceljs": "catalog:",
-    "lodash-es": "catalog:",
+    "lodash-es": "catalog:prod",
     "node-fetch": "catalog:",
     "p-limit": "catalog:",
     "sharp": "catalog:"

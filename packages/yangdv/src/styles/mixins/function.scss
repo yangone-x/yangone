@@ -1,0 +1,153 @@
+@use 'config';
+@use 'sass:meta';
+@use 'sass:string';
+@use 'sass:math';
+@use 'sass:color';
+
+/// 将选择器转换为字符串形式。
+/// 通过 meta.inspect 将选择器序列化为字符串，然后去除首尾的括号字符，
+/// 返回纯文本的选择器字符串，便于后续的字符串匹配操作。
+/// @param {Selector} $selector - Sass 选择器
+/// @return {String} 转换后的选择器字符串
+@function selectorToString($selector) {
+  $selector: meta.inspect($selector);
+  $selector: string.slice($selector, 2, -2);
+
+  @return $selector;
+}
+
+/// 判断选择器中是否包含 BEM 修饰符分隔符（如 `--`）。
+/// 将选择器转为字符串后查找修饰符分隔符，用于检测当前选择器是否已带有修饰符。
+/// @param {Selector} $selector - Sass 选择器
+/// @return {Boolean} 包含修饰符返回 true，否则返回 false
+@function containsModifier($selector) {
+  $selector: selectortostring($selector);
+
+  @if string.index($selector, config.$modifier-separator) {
+    @return true;
+  }
+
+ @else {
+    @return false;
+  }
+}
+
+/// 判断选择器中是否包含状态类名前缀（如 `.is-`）。
+/// 将选择器转为字符串后查找状态前缀类名，用于检测当前选择器是否已带有状态类。
+/// @param {Selector} $selector - Sass 选择器
+/// @return {Boolean} 包含状态类名返回 true，否则返回 false
+@function containWhenFlag($selector) {
+  $selector: selectortostring($selector);
+
+  @if string.index($selector, '.' + config.$state-prefix) {
+    @return true;
+  }
+
+ @else {
+    @return false;
+  }
+}
+
+/// 判断选择器中是否包含伪类或伪元素（即 `:` 字符）。
+/// 将选择器转为字符串后查找冒号，用于检测当前选择器是否带有伪类/伪元素。
+/// @param {Selector} $selector - Sass 选择器
+/// @return {Boolean} 包含伪类/伪元素返回 true，否则返回 false
+@function containPseudoClass($selector) {
+  $selector: selectortostring($selector);
+
+  @if string.index($selector, ':') {
+    @return true;
+  }
+
+ @else {
+    @return false;
+  }
+}
+
+/// 判断选择器是否命中任一特殊嵌套规则。
+/// 综合检测选择器是否包含修饰符、状态类名或伪类/伪元素，
+/// 用于在 BEM e mixin 中决定是否保留父级嵌套关系。
+/// @param {Selector} $selector - Sass 选择器
+/// @return {Boolean} 命中任一规则返回 true，否则返回 false
+@function hitAllSpecialNestRule($selector) {
+  @return containsModifier($selector) or containWhenFlag($selector) or
+    containPseudoClass($selector);
+}
+
+// join var name
+/// 拼接 CSS 变量名，将命名空间与传入的路径列表组合为完整的 CSS 变量名。
+/// 例如：joinVarName(('button', 'text-color')) => '--el-button-text-color'
+/// @param {List} $list - 变量名路径列表
+/// @return {String} 完整的 CSS 变量名（含 `--` 前缀）
+@function joinVarName($list) {
+  $name: '--' + config.$namespace;
+
+  @each $item in $list {
+    @if $item != '' {
+      $name: $name + '-' + $item;
+    }
+  }
+
+  @return $name;
+}
+
+/// 根据传入的参数生成 CSS 变量名。
+/// 例如：getCssVarName('button', 'text-color') => '--el-button-text-color'
+/// @param {String...} $args - 变量名路径参数（可变参数）
+/// @return {String} 完整的 CSS 变量名
+@function getCssVarName($args...) {
+  @return joinVarName($args);
+}
+
+/// 根据传入的参数生成 CSS 变量引用（var()）。
+/// 例如：getCssVar('button', 'text-color') => 'var(--el-button-text-color)'
+/// @param {String...} $args - 变量名路径参数（可变参数）
+/// @return {String} CSS 变量引用字符串
+@function getCssVar($args...) {
+  @return var(#{joinVarName($args)});
+}
+
+/// 根据传入的参数生成带默认值的 CSS 变量引用。
+/// 例如：getCssVarWithDefault(('button', 'text-color'), red) => 'var(--el-button-text-color, red)'
+/// @param {List} $args - 变量名路径列表
+/// @param {*} $default - 默认值，当变量未定义时使用
+/// @return {String} 带默认值的 CSS 变量引用字符串
+@function getCssVarWithDefault($args, $default) {
+  @return var(#{joinVarName($args)}, #{$default});
+}
+
+/// 根据 BEM 命名规范拼接完整的类名。
+/// 例如：bem('block', 'element', 'modifier') => 'el-block__element--modifier'
+/// 元素和修饰符为可选参数，为空字符串时不拼接对应部分。
+/// @param {String} $block - 块名称
+/// @param {String} $element [''] - 元素名称，默认为空
+/// @param {String} $modifier [''] - 修饰符名称，默认为空
+/// @return {String} 拼接后的 BEM 类名
+@function bem($block, $element: '', $modifier: '') {
+  $name: config.$namespace + config.$block-separator + $block;
+
+  @if $element != '' {
+    $name: $name + config.$element-separator + $element;
+  }
+
+  @if $modifier != '' {
+    $name: $name + config.$modifier-separator + $modifier;
+  }
+
+  // @debug $name;
+  @return $name;
+}
+
+/// 将颜色值转换为四舍五入后的 rgba 格式。
+/// 提取颜色的 R、G、B 通道值并四舍五入为整数，同时保留 alpha 通道值，
+/// 返回标准 rgba() 格式的颜色值，避免浮点数精度问题。
+/// @param {Color} $color - Sass 颜色值
+/// @return {Color} rgba 格式的颜色值
+@function roundColor($color) {
+  $r: math.round(color.channel($color, 'red'));
+  $g: math.round(color.channel($color, 'green'));
+  $b: math.round(color.channel($color, 'blue'));
+  $a: color.channel($color, 'alpha');
+
+  @return rgba($r, $g, $b, $a);
+}

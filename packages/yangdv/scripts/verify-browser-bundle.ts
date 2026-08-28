@@ -12,10 +12,7 @@ const distDir = path.resolve(__dirname, '../dist');
 // so a bare `process.env.NODE_ENV` throws `ReferenceError: process is not
 // defined` and the whole bundle fails to load (#666). `typeof process` guards
 // are fine — they short-circuit to "undefined" in the browser.
-const BROWSER_BUNDLES = [
-  'yangdv.js',
-  'yangdv.esm.js',
-];
+const BROWSER_BUNDLES = ['yangdv.js', 'yangdv.esm.js'];
 
 function findUnguardedProcess(code: string): number[] {
   const offsets: number[] = [];

@@ -1,7 +1,7 @@
-import vue from '@vitejs/plugin-vue'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import { defineConfig } from 'tsdown'
-import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types'
+import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
+import { defineConfig } from 'tsdown';
+import { tsxResolveTypes } from 'vite-plugin-tsx-resolve-types';
 
 export default defineConfig({
   plugins: [
@@ -17,7 +17,6 @@ export default defineConfig({
     '!src/**/tests/*',
     '!src/**/*.test.ts',
     '!src/**/*.test.tsx',
-    '!src/index.with-locales.ts',
   ],
   unbundle: true,
   format: 'es',
@@ -25,15 +24,13 @@ export default defineConfig({
     return {
       js: '.js',
       dts: '.d.ts',
-    }
+    };
   },
   // minify: true,
   clean: true,
-  copy: [
-    // { from: 'src/style/reset.css', to: 'dist' },
-  ],
+  copy: [{ from: 'src/styles/reset.css', to: 'dist' }],
   deps: {
     onlyBundle: false,
     neverBundle: true,
   },
-})
+});
