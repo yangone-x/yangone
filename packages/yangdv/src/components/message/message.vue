@@ -54,21 +54,20 @@ const curOffset = computed(() => {
   );
 });
 
+const bottom = computed(() => height.value + curOffset.value);
+
 const horizontalClass = computed(() => {
-  if (props.placement.endsWith('left')) return 'left';
-  if (props.placement.endsWith('right')) return 'right';
-  return 'center';
+  if (props.placement.endsWith('left')) return ns.is('left');
+  if (props.placement.endsWith('right')) return ns.is('right');
+  return ns.is('right');
 });
 
-const bottom = computed(() => height.value + curOffset.value);
-const verticalClass = computed(() => {
-  if (props.placement.startsWith('top')) return 'top';
-  if (props.placement.startsWith('bottom')) return 'bottom';
-  return 'center';
-});
+const verticalProperty = computed(() =>
+  props.placement.startsWith('top') ? 'top' : 'bottom',
+);
 
 const customStyle = computed<CSSProperties>(() => ({
-  [verticalClass.value]: `${curOffset.value}px`,
+  [verticalProperty.value]: `${curOffset.value}px`,
   zIndex: currentZIndex.value,
 }));
 
@@ -136,140 +135,32 @@ defineExpose({
       ref="messageRef"
       :class="[
         ns.b(),
-        ns.b(type),
+        { [ns.m(type)]: type },
         ns.is('plain', plain),
         ns.is('closable', showClose),
-        ns.b(`horizontal-${horizontalClass}`),
-        ns.b(`vertical-${verticalClass}`),
+        ns.is('bottom', verticalProperty === 'bottom'),
+        horizontalClass,
       ]"
       :style="customStyle"
       role="alert"
       @mouseenter="clearTimer"
       @mouseleave="startTimer"
     >
-      <div v-if="repeatNum > 1" :class="ns.b('badge')">{{ repeatNum }}</div>
-      <div v-if="iconComponent" :class="ns.b('icon')">
+      <div v-if="repeatNum > 1" :class="ns.e('badge')">{{ repeatNum }}</div>
+      <div v-if="iconComponent" :class="ns.e('icon')">
         <component :is="iconComponent" />
       </div>
       <slot>
-        <p v-if="!dangerouslyUseHTMLString" :class="ns.b('content')">
+        <p v-if="!dangerouslyUseHTMLString" :class="ns.e('content')">
           {{ content }}
         </p>
         <!-- 请注意，消息可能已被篡改，切勿将用户输入用作消息内容 -->
         <!-- eslint-disable-next-line vue/no-v-html -->
-        <p v-else :class="ns.b('content')" v-html="content"></p>
+        <p v-else :class="ns.e('content')" v-html="content"></p>
       </slot>
       <div v-if="showClose" :class="ns.b('close')" @click.stop="handleClose">
-        <CloseIcon :class="ns.b('close-icon')" />
+        <CloseIcon />
       </div>
     </div>
   </transition>
 </template>
-
-<style lang="scss">
-.y-message {
-  --message-plain-overlay: #fff;
-  --message-plain-shadow:
-    0 6px 16px 0 rgb(0 0 0 / 8%), 0 3px 6px -4px rgb(0 0 0 / 12%);
-  --message-info-color: #333;
-
-  position: fixed;
-  box-sizing: border-box;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  width: fit-content;
-  max-width: calc(100% - 32px);
-  padding: 9px 12px;
-  word-break: break-all;
-  border-radius: 4px;
-  transition:
-    opacity 0.3s,
-    transform 0.4s,
-    top 0.4s,
-    bottom 0.4s;
-
-  &.y-message-horizontal-left {
-    left: 16px;
-  }
-
-  &.y-message-horizontal-right {
-    right: 16px;
-  }
-
-  &.y-message-horizontal-center {
-    right: 0;
-    left: 0;
-    margin: 0 auto;
-  }
-
-  p {
-    margin: 0;
-  }
-
-  .y-message-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    padding: 0 6px;
-    font-size: 14px;
-    color: white;
-    border-radius: 10px;
-  }
-
-  .y-message-content {
-    padding: 0;
-    font-size: 14px;
-    line-height: 1;
-
-    &:focus {
-      outline-width: 0;
-    }
-  }
-
-  .y-message-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .y-message-close {
-    display: flex;
-    align-items: center;
-    align-self: flex-start;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  &.y-message-info {
-    color: var(--message-info-color);
-    background-color: rgb(0 0 0 / 60%);
-
-    .y-message-badge {
-      background-color: var(--message-info-color);
-    }
-  }
-
-  &.is-plain {
-    background-color: var(--message-plain-overlay);
-    border-color: var(--message-plain-overlay);
-    box-shadow: var(--message-plain-shadow);
-  }
-
-  svg {
-    width: 1em;
-    height: 1em;
-    color: currentcolor;
-  }
-}
-
-.y-message-fade-enter-from,
-.y-message-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-100%);
-
-  &.y-message-vertical-bottom {
-    transform: translateY(100%);
-  }
-}
-</style>

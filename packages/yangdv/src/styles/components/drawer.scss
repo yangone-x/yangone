@@ -1,5 +1,5 @@
-@use 'mixins/mixins' as *;
-@use 'common/popup' as *;
+@use '../mixins/mixins' as *;
+@use '../common/popup' as *;
 
 $directions: rtl, ltr, ttb, btt;
 
@@ -8,25 +8,18 @@ $directions: rtl, ltr, ttb, btt;
 }
 
 @include b(drawer) {
-  @each $direction in $directions {
-    .#{$direction} {
-      transform: translate(0, 0);
-    }
-  }
-
   position: absolute;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  background-color: getcssvar('drawer', 'bg-color');
-  box-shadow: getcssvar('box-shadow', 'dark');
-  transition: all getcssvar('transition-duration');
+  background-color: rgb(255 255 255 / 60%);
+  box-shadow: box-shadow(0 2px 12px 0 rgb(0 0 0 / 10%));
+  transition: all use-css-var(transition-duration-300);
 
-  @include e(footer) {
-    padding: getcssvar('drawer-padding-primary');
-    padding-top: 10px;
-    overflow: hidden;
-    text-align: right;
+  @each $direction in $directions {
+    .#{$direction} {
+      transform: translate(0, 0);
+    }
   }
 
   @include when(dragging) {
@@ -37,13 +30,13 @@ $directions: rtl, ltr, ttb, btt;
     position: absolute;
     user-select: none;
     background-color: transparent;
-    transition: all 0.2s;
+    transition: all use-css-var(transition-duration-200);
 
     &::before {
       position: absolute;
       content: '';
       background-color: transparent;
-      transition: all 0.2s;
+      transition: all use-css-var(transition-duration-200);
     }
 
     &:hover::before {
@@ -53,54 +46,6 @@ $directions: rtl, ltr, ttb, btt;
 
   &__sr-focus:focus {
     outline: none !important;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    padding: getcssvar('drawer-padding-primary');
-    padding-bottom: 0;
-    margin-bottom: 32px;
-    overflow: hidden;
-    color: getcssvar('text-color', 'primary');
-
-    & > :first-child {
-      flex: 1;
-    }
-  }
-
-  &__title {
-    flex: 1;
-    margin: 0;
-    font-size: 16px;
-    line-height: inherit;
-  }
-
-  &__close-btn {
-    display: inline-flex;
-    font-size: getcssvar('font-size-extra-large');
-    color: inherit;
-    cursor: pointer;
-    outline: none;
-    background-color: transparent;
-    border: none;
-
-    &:focus,
-    &:hover {
-      i {
-        color: getcssvar('color-primary');
-      }
-    }
-  }
-
-  &__body {
-    flex: 1;
-    padding: getcssvar('drawer-padding-primary');
-    overflow: auto;
-
-    & > * {
-      box-sizing: border-box;
-    }
   }
 
   &.ltr,
@@ -207,7 +152,7 @@ $directions: rtl, ltr, ttb, btt;
 .#{$namespace}-drawer-fade {
   &-enter-active,
   &-leave-active {
-    transition: all 0.2s;
+    transition: all use-css-var(transition-duration-300);
   }
 
   &-enter-from,

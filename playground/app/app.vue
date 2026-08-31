@@ -1,11 +1,26 @@
 <script setup lang="ts">
-import { Button } from 'yangdv';
+import { Anchor, AnchorLink, useMessage } from 'yangdv';
+const { message } = useMessage();
+
+function add() {
+  message({
+    content: 'This is a message',
+  });
+}
 </script>
 
 <template>
-  <div id="anchor-1" class="part part-1">
-    <Button />
+  <Anchor class="menus">
+    <AnchorLink href="#part-1" class="menu-item">part1</AnchorLink>
+    <AnchorLink href="#part-2" class="menu-item">part2</AnchorLink>
+    <AnchorLink href="#part-3" class="menu-item">part3</AnchorLink>
+  </Anchor>
+
+  <div id="part-1" class="part-1">
+    <button @click="add">asdf</button>
   </div>
+  <div id="part-2" class="part-2"></div>
+  <div id="part-3" class="part-3"></div>
 </template>
 
 <style lang="scss">
@@ -14,6 +29,10 @@ import { Button } from 'yangdv';
   top: 50%;
   left: 0;
   z-index: 999;
+}
+
+.menu-item.is-active {
+  color: red;
 }
 
 .part-1 {
@@ -30,9 +49,5 @@ import { Button } from 'yangdv';
 
 .part-4 {
   height: 800px;
-}
-
-.menu-item.active {
-  color: red;
 }
 </style>

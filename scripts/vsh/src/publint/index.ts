@@ -14,7 +14,6 @@ import {
   readJSON,
   UNICODE,
 } from '@yangone/node-utils';
-
 import { publint } from 'publint';
 import { formatMessage } from 'publint/utils';
 

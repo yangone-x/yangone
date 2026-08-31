@@ -1,6 +1,5 @@
-import { execaCommand, getPackages } from '@yangone/node-utils';
-
 import { cancel, isCancel, select } from '@clack/prompts';
+import { execaCommand, getPackages } from '@yangone/node-utils';
 
 interface RunOptions {
   command?: string;

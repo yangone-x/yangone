@@ -1,5 +1,4 @@
 import { colors, consola } from '@yangone/node-utils';
-
 import { cac } from 'cac';
 
 import { version } from '../package.json';

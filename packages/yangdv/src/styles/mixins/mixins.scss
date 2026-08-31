@@ -1,11 +1,12 @@
+@use 'config' as *;
 @use 'function' as *;
 // forward mixins
 @forward 'config';
 @forward 'function';
 
-@use 'config' as *;
 @use 'sass:string';
 @use 'sass:map';
+@use 'sass:color';
 
 $B: null;
 $E: null;
@@ -20,9 +21,7 @@ $E: null;
     @media only screen and #{string.unquote(map.get($map, $key))} {
       @content;
     }
-  }
-
- @else {
+  } @else {
     @warn 'Undefined points: `#{$map}`';
   }
 }
@@ -32,7 +31,7 @@ $E: null;
 /// 同时将块名赋值给全局变量 $B 供后续 e、m 等 mixin 使用。
 /// @param {String} $block - 块名称
 @mixin b($block) {
-  $B: $namespace + $common-separator + $block !global;
+  $B: $namespace + $block-separator + $block !global;
 
   .#{$B} {
     @content;
@@ -62,9 +61,7 @@ $E: null;
         }
       }
     }
-  }
-
- @else {
+  } @else {
     @at-root {
       #{$currentSelector} {
         @content;
@@ -210,6 +207,10 @@ $E: null;
 /// @param {List} $box-shadow - 阴影属性
 @mixin picker-popper($background, $border, $box-shadow) {
   &.#{$namespace}-popper {
+    background: $background;
+    border: $border;
+    box-shadow: $box-shadow;
+
     @each $placement,
       $adjacency
         in ('top': 'left', 'bottom': 'right', 'left': 'bottom', 'right': 'top')
@@ -222,14 +223,92 @@ $E: null;
       }
     }
 
-    background: $background;
-    border: $border;
-    box-shadow: $box-shadow;
-
     .#{$namespace}-popper__arrow {
       &::before {
         border: $border;
       }
     }
   }
+}
+
+/// 设置单个 CSS 变量，将变量名列表通过 build-css-var-name 构建为完整的 CSS 变量名，
+/// 并赋值为传入的 $value。生成如 `--ns-color-primary: #409eff;` 的声明。
+/// @param {List} $name - 变量名路径（如 ('color', 'primary')）
+/// @param {*} $value - 变量值
+@mixin set-css-var($name, $value) {
+  #{build-css-var-name($name)}: #{$value};
+}
+
+/// 从 Map 中按 $key 取值，设置带后缀的 CSS 变量。
+/// 将 $key 追加到变量名路径末尾，并从 $variables Map 中按 $key 查找对应值。
+/// 生成如 `--ns-color-primary-light-3: #xxx;` 的声明。
+/// @param {List} $name - 变量名路径
+/// @param {String} $key - Map 查找键，同时作为变量名后缀（如 light-3、dark-2）
+/// @param {Map} $variables - 取值的配置 Map
+@mixin set-css-var-by-key($name, $key, $variables) {
+  #{build-css-var-name($name, $key)}: #{map.get($variables, $key)};
+}
+
+/// 批量设置某颜色的完整色阶（基础色 + light 变体 + dark 变体）。
+/// 先设置基础色 `--ns-color-{type}`，再遍历 (3,5,7,8,9) 生成 light-N 变体，
+/// 最后生成 dark-2 变体，用于主题色阶的完整定义。
+/// @param {Map} $colors - 颜色配置 Map，结构为 {type: {base, light-N, dark-N}}
+/// @param {String} $type - 颜色类型名（如 primary、success）
+@mixin set-css-color-scale($colors, $type) {
+  @include set-css-var(('color', $type), map.get($colors, $type, 'base'));
+
+  @each $i in (3, 5, 7, 8, 9) {
+    @include set-css-var(
+      ('color', $type, 'light', $i),
+      map.get($colors, $type, 'light-#{$i}')
+    );
+  }
+
+  @include set-css-var(
+    ('color', $type, 'dark-2'),
+    map.get($colors, $type, 'dark-2')
+  );
+}
+
+/// 批量设置组件级 CSS 变量。遍历 $variables Map，
+/// 当键为 'default' 时生成无后缀的基础变量，否则生成带属性后缀的变量。
+/// 用于一次性定义某组件的全部 CSS 变量。
+/// @param {List} $name - 组件变量名路径
+/// @param {Map} $variables - 属性与值的映射，'default' 键对应基础值
+@mixin set-css-vars($name, $variables) {
+  @each $attribute, $value in $variables {
+    @if $attribute == 'default' {
+      #{build-css-var-name($name)}: #{$value};
+    } @else {
+      #{build-css-var-name(($name, $attribute))}: #{$value};
+    }
+  }
+}
+
+/// 设置颜色的 RGB 分量变量，用于支持 rgba() 形式的透明度叠加。
+/// 从 $colors Map 取出基础色，用 sass:color 模块提取 R/G/B 三个通道值，
+/// 生成如 `--ns-color-primary-rgb: 64, 158, 255;` 的声明。
+/// @param {String} $type - 颜色类型名
+@mixin set-css-color-channels($type) {
+  $color: map.get($colors, $type, 'base');
+  @include set-css-var(
+    ('color', $type, 'rgb'),
+    #{color.channel($color, 'red', $space: rgb),
+        color.channel($color, 'green', $space: rgb),
+        color.channel($color, 'blue', $space: rgb)}
+  );
+}
+
+/// 为局部 CSS 变量创建全局变量的别名。
+/// 使组件变量随全局主题变量联动变化。
+/// @param {List} $var - 局部变量名路径
+/// @param {List} $gVar - 要别名的全局变量名路径
+/// @example
+/// @include set-css-var-alias(('button', 'bg-color'), ('color', 'primary'));
+/// 生成 `--ns-button-bg-color: var(--ns-color-primary);`
+@mixin set-css-var-alias($var, $gVar) {
+  $varName: build-css-var-name($var);
+  $gVarName: build-css-var-name($gVar);
+
+  #{$varName}: var(#{$gVarName});
 }

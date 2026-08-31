@@ -26,10 +26,15 @@
     "package.json"
   ],
   "sideEffects": [
-    "./dist/reset.css"
+    "./dist/reset.css",
+    "./dist/yangdv.css",
+    "./dist/yangdv.esm.js",
+    "./dist/yangdv.js"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
+  "unpkg": "dist/yangdv.js",
+  "jsdelivr": "dist/yangdv.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -90,6 +95,9 @@
       ]
     },
     "./dist/reset.css": "./dist/reset.css",
+    "./dist/yangdv.css": "./dist/yangdv.css",
+    "./dist/yangdv.esm.js": "./dist/yangdv.esm.js",
+    "./dist/yangdv.js": "./dist/yangdv.js",
     "./package.json": "./package.json"
   },
   "contributes": {

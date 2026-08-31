@@ -245,3 +245,9 @@ template {
 [hidden] {
   display: none !important;
 }
+
+svg {
+  width: 1em;
+  height: 1em;
+  color: currentcolor;
+}

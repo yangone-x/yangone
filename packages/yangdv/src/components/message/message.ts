@@ -33,7 +33,7 @@ export const messageTypeValues: MessageType[] = [
   'error',
 ];
 
-class Message {
+class CreateMessage {
   defaultOptions: MessageOptions = {
     type: 'info',
   };
@@ -213,4 +213,4 @@ class Message {
   }
 }
 
-export { Message };
+export { CreateMessage };

@@ -68,6 +68,8 @@ export default {
           'theme',
           'utility',
           'custom-variant',
+          'extend',
+          'warn',
         ],
       },
     ],
@@ -84,20 +86,8 @@ export default {
       [
         'dollar-variables',
         'custom-properties',
-        'at-rules',
         'declarations',
-        {
-          name: 'supports',
-          type: 'at-rule',
-        },
-        {
-          name: 'media',
-          type: 'at-rule',
-        },
-        {
-          name: 'include',
-          type: 'at-rule',
-        },
+        'at-rules',
         'rules',
       ],
       { severity: 'error' },
@@ -137,10 +127,13 @@ export default {
           'theme',
           'utility',
           'custom-variant',
+          'extend',
+          'warn',
         ],
       },
     ],
     'scss/operator-no-newline-after': null,
+    'at-rule-empty-line-before': null,
     'selector-class-pattern':
       '^-?(?:(?:o|c|u|t|s|is|has|_|js|qa)-)?[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*(?:__[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)?(?:--[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*)?(?:[.+])?$',
 

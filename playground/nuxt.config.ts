@@ -5,4 +5,5 @@ export default defineNuxtConfig({
   devServer: {
     host: '0.0.0.0',
   },
+  css: ['~/assets/index.css'],
 });

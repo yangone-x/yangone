@@ -1,5 +1,4 @@
 import { consola } from '@yangone/node-utils';
-
 import { cac } from 'cac';
 
 import { run } from './run';

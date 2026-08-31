@@ -110,17 +110,17 @@ onMounted(() => {
     >
       <div
         v-show="visible"
-        :class="ns.b('root')"
+        :class="ns.b()"
         :style="{ zIndex: curZIndex }"
         :aria-describedby="bodyId"
       >
         <div
-          :class="[ns.b('mask'), ns.is('hidden', !mask)]"
+          :class="[ns.e('mask'), ns.is('hidden', !mask)]"
           @click="handleClickMask"
         ></div>
         <div
           v-if="rendered"
-          :class="ns.b('wrap')"
+          :class="ns.e('wrap')"
           role="dialog"
           aria-modal="true"
         >
@@ -130,43 +130,3 @@ onMounted(() => {
     </Transition>
   </Teleport>
 </template>
-
-<style lang="scss">
-.y-modal-root {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transform: translateZ(0);
-  transition: opacity 0.3s;
-
-  .y-modal-mask {
-    position: absolute;
-    inset: 0;
-    background-color: rgb(0 0 0 / 50%);
-
-    &.is-hidden {
-      opacity: 0;
-    }
-  }
-
-  .y-modal-wrap {
-    position: relative;
-    transition: all 0.3s;
-  }
-}
-
-.y-modal-enter-from {
-  opacity: 0;
-}
-
-.y-modal-leave-to {
-  opacity: 0;
-}
-
-.y-modal-enter-from .y-modal-wrap,
-.y-modal-leave-to .y-modal-wrap {
-  transform: scale(0.9);
-}
-</style>

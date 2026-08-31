@@ -1,4 +1,4 @@
-@use 'config';
+@use './config';
 @use 'sass:meta';
 @use 'sass:string';
 @use 'sass:math';
@@ -9,7 +9,7 @@
 /// 返回纯文本的选择器字符串，便于后续的字符串匹配操作。
 /// @param {Selector} $selector - Sass 选择器
 /// @return {String} 转换后的选择器字符串
-@function selectorToString($selector) {
+@function selector-to-string($selector) {
   $selector: meta.inspect($selector);
   $selector: string.slice($selector, 2, -2);
 
@@ -20,14 +20,12 @@
 /// 将选择器转为字符串后查找修饰符分隔符，用于检测当前选择器是否已带有修饰符。
 /// @param {Selector} $selector - Sass 选择器
 /// @return {Boolean} 包含修饰符返回 true，否则返回 false
-@function containsModifier($selector) {
-  $selector: selectortostring($selector);
+@function contains-modifier($selector) {
+  $selector: selector-to-string($selector);
 
   @if string.index($selector, config.$modifier-separator) {
     @return true;
-  }
-
- @else {
+  } @else {
     @return false;
   }
 }
@@ -36,14 +34,12 @@
 /// 将选择器转为字符串后查找状态前缀类名，用于检测当前选择器是否已带有状态类。
 /// @param {Selector} $selector - Sass 选择器
 /// @return {Boolean} 包含状态类名返回 true，否则返回 false
-@function containWhenFlag($selector) {
-  $selector: selectortostring($selector);
+@function contain-when-flag($selector) {
+  $selector: selector-to-string($selector);
 
   @if string.index($selector, '.' + config.$state-prefix) {
     @return true;
-  }
-
- @else {
+  } @else {
     @return false;
   }
 }
@@ -52,14 +48,12 @@
 /// 将选择器转为字符串后查找冒号，用于检测当前选择器是否带有伪类/伪元素。
 /// @param {Selector} $selector - Sass 选择器
 /// @return {Boolean} 包含伪类/伪元素返回 true，否则返回 false
-@function containPseudoClass($selector) {
-  $selector: selectortostring($selector);
+@function contain-pseudo-class($selector) {
+  $selector: selector-to-string($selector);
 
   @if string.index($selector, ':') {
     @return true;
-  }
-
- @else {
+  } @else {
     @return false;
   }
 }
@@ -69,17 +63,17 @@
 /// 用于在 BEM e mixin 中决定是否保留父级嵌套关系。
 /// @param {Selector} $selector - Sass 选择器
 /// @return {Boolean} 命中任一规则返回 true，否则返回 false
-@function hitAllSpecialNestRule($selector) {
-  @return containsModifier($selector) or containWhenFlag($selector) or
-    containPseudoClass($selector);
+@function hit-all-special-nest-rule($selector) {
+  @return contains-modifier($selector) or contain-when-flag($selector) or
+    contain-pseudo-class($selector);
 }
 
-// join var name
-/// 拼接 CSS 变量名，将命名空间与传入的路径列表组合为完整的 CSS 变量名。
-/// 例如：joinVarName(('button', 'text-color')) => '--el-button-text-color'
+/// 构建 CSS 变量名，将命名空间与传入的路径列表组合为完整的 CSS 变量名。
 /// @param {List} $list - 变量名路径列表
 /// @return {String} 完整的 CSS 变量名（含 `--` 前缀）
-@function joinVarName($list) {
+/// @example
+/// build-css-var-name(('button', 'text-color')) => '--ns-button-text-color'
+@function build-css-var-name($list) {
   $name: '--' + config.$namespace;
 
   @each $item in $list {
@@ -91,38 +85,34 @@
   @return $name;
 }
 
-/// 根据传入的参数生成 CSS 变量名。
-/// 例如：getCssVarName('button', 'text-color') => '--el-button-text-color'
-/// @param {String...} $args - 变量名路径参数（可变参数）
-/// @return {String} 完整的 CSS 变量名
-@function getCssVarName($args...) {
-  @return joinVarName($args);
-}
-
-/// 根据传入的参数生成 CSS 变量引用（var()）。
-/// 例如：getCssVar('button', 'text-color') => 'var(--el-button-text-color)'
-/// @param {String...} $args - 变量名路径参数（可变参数）
+/// 生成 CSS var() 变量引用，支持可变参数 / List数组，可选默认值
+/// @param {String | List} $list - 可变参数：可以传多个字符串片段，或传入List数组；第二个参数可选为默认值
+/// @param {Any} $default - 默认值，默认为 null
 /// @return {String} CSS 变量引用字符串
-@function getCssVar($args...) {
-  @return var(#{joinVarName($args)});
-}
-
-/// 根据传入的参数生成带默认值的 CSS 变量引用。
-/// 例如：getCssVarWithDefault(('button', 'text-color'), red) => 'var(--el-button-text-color, red)'
-/// @param {List} $args - 变量名路径列表
-/// @param {*} $default - 默认值，当变量未定义时使用
-/// @return {String} 带默认值的 CSS 变量引用字符串
-@function getCssVarWithDefault($args, $default) {
-  @return var(#{joinVarName($args)}, #{$default});
+/// @example
+/// 多参数写法
+/// use-css-var('button', red) => var(--ns-button, red)
+/// 直接传List数组
+/// use-css-var(('button', 'text-color')) => var(--ns-button-text-color)
+/// 数组+默认值
+/// use-css-var(('button', 'text-color'), red) => var(--ns-button-text-color, red)
+@function use-css-var($list, $default: null) {
+  $varName: build-css-var-name($list);
+  @if not $default {
+    @return var(#{$varName});
+  } @else {
+    @return var(#{$varName}, #{$default});
+  }
 }
 
 /// 根据 BEM 命名规范拼接完整的类名。
-/// 例如：bem('block', 'element', 'modifier') => 'el-block__element--modifier'
 /// 元素和修饰符为可选参数，为空字符串时不拼接对应部分。
 /// @param {String} $block - 块名称
 /// @param {String} $element [''] - 元素名称，默认为空
 /// @param {String} $modifier [''] - 修饰符名称，默认为空
 /// @return {String} 拼接后的 BEM 类名
+/// @example
+/// bem('button', 'text', 'primary') => ns-button__text--primary
 @function bem($block, $element: '', $modifier: '') {
   $name: config.$namespace + config.$block-separator + $block;
 
@@ -134,7 +124,6 @@
     $name: $name + config.$modifier-separator + $modifier;
   }
 
-  // @debug $name;
   @return $name;
 }
 
@@ -143,7 +132,7 @@
 /// 返回标准 rgba() 格式的颜色值，避免浮点数精度问题。
 /// @param {Color} $color - Sass 颜色值
 /// @return {Color} rgba 格式的颜色值
-@function roundColor($color) {
+@function round-color($color) {
   $r: math.round(color.channel($color, 'red'));
   $g: math.round(color.channel($color, 'green'));
   $b: math.round(color.channel($color, 'blue'));

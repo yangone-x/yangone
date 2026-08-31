@@ -3,6 +3,8 @@ import type { App, Plugin } from 'vue';
 import * as components from './components';
 import { globalNamespace } from './hooks/use-namespace';
 
+import './styles/index.scss';
+
 export * from './components';
 
 export function setPrefix(newPrefix: string) {

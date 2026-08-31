@@ -1,0 +1,40 @@
+@use '../mixins/mixins' as *;
+@use '../common/popup' as *;
+
+@include b(modal) {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateZ(0);
+  transition: opacity use-css-var(transition-duration-300);
+
+  @include e(mask) {
+    position: absolute;
+    inset: 0;
+    background-color: rgb(0 0 0 / 50%);
+
+    @include when(hidden) {
+      opacity: 0;
+    }
+  }
+
+  @include e(wrap) {
+    position: relative;
+    transition: all use-css-var(transition-duration-300);
+  }
+}
+
+.y-modal-enter-from {
+  opacity: 0;
+}
+
+.y-modal-leave-to {
+  opacity: 0;
+}
+
+.y-modal-enter-from .y-modal-wrap,
+.y-modal-leave-to .y-modal-wrap {
+  transform: scale(0.9);
+}

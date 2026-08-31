@@ -31,7 +31,7 @@ export const notificationTypeValues: NotificationType[] = [
   'error',
 ];
 
-class Notification {
+class CreateNotification {
   defaultOptions: NotificationOptions = {
     type: 'info',
   };
@@ -196,4 +196,4 @@ class Notification {
   }
 }
 
-export { Notification };
+export { CreateNotification };
