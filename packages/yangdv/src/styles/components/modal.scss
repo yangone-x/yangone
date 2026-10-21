@@ -1,5 +1,4 @@
 @use '../mixins/mixins' as *;
-@use '../common/popup' as *;
 
 @include b(modal) {
   position: fixed;

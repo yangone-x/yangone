@@ -78,12 +78,88 @@ export interface MergeImagesOptions {
   sharpPixelLimit?: number;
 }
 
+export interface MergeImagesResult {
+  /**
+   * 输出文件路径
+   */
+  outputPath: string;
+  /**
+   * 是否被中途停止（停止时输出文件仅包含已合成的条带，其余为透明）
+   */
+  stopped: boolean;
+  /**
+   * 合成图总高度
+   */
+  totalHeight: number;
+  /**
+   * 合成图总宽度
+   */
+  totalWidth: number;
+}
+
+export interface MergeImagesController {
+  /**
+   * 获取结果；未完成时抛错。与直接读 result 的区别是语义明确。
+   */
+  getResult: () => MergeImagesResult;
+  /**
+   * 是否正在合成
+   */
+  readonly isRunning: boolean;
+  /**
+   * 是否已被停止（stop() 调用后为 true，重新 start() 会复位）
+   */
+  readonly isStopped: boolean;
+  /**
+   * 已处理条带数量（实时）
+   */
+  readonly processed: number;
+  /**
+   * 本次（或最近一次）运行的 Promise；未 start 时为 null。
+   * 等待结果请 `await controller.start()` 或 `await controller.promise`。
+   */
+  readonly promise: null | Promise<MergeImagesResult>;
+  /**
+   * 最近一次运行的结果；未运行完时为 null
+   */
+  readonly result: MergeImagesResult | null;
+  /**
+   * 开始合成（同步返回，不阻塞）。
+   * 重复调用返回同一个运行中的 Promise；上一次运行结束后调用则开启新的一轮。
+   */
+  start: () => Promise<MergeImagesResult>;
+  /**
+   * 停止合成：跳过未开始的条带任务，已合成的部分仍会编码写入输出文件
+   * （未合成区域为透明）。Promise 不会 reject，而是以已完成部分正常 resolve
+   * （result.stopped === true）。未 start 或已结束时调用无效果。
+   */
+  stop: () => void;
+  /**
+   * 条带总数（horizontal 为行数，vertical 为列数）
+   */
+  readonly total: number;
+}
+
 /**
  * 合成图片
+ *
+ * 同步返回一个包含 start/stop 的控制对象，方便外部控制合成的开始与中止：
+ *
+ * ```ts
+ * const task = mergeImages({ imagesPath: './images', outputPath: './merged.png' });
+ * task.start();            // 开始合成（不阻塞）
+ * // ...任意时刻
+ * task.stop();             // 停止：跳过未开始的条带，已合成部分仍写入文件
+ * const res = await task.promise; // { outputPath, totalWidth, totalHeight, stopped }
+ * ```
+ *
+ * 一次性合成（无需中途停止）可直接：
+ * `const res = await mergeImages({ ... }).start();`
+ *
  * @param options 合成图片参数
- * @returns
+ * @returns 合成控制器
  */
-export async function mergeImages(options: MergeImagesOptions) {
+export function mergeImages(options: MergeImagesOptions): MergeImagesController {
   // 默认配置
   const defaultOptions = {
     cols: 64,
@@ -101,8 +177,6 @@ export async function mergeImages(options: MergeImagesOptions) {
   };
 
   const mergeOptions = merge(defaultOptions, options);
-  // 创建并发限制器
-  const limit = pLimit(mergeOptions.concurrency);
 
   // 计算最终合成图片的总宽度和总高度
   const totalWidth = mergeOptions.cols * mergeOptions.imageWidth;
@@ -119,149 +193,220 @@ export async function mergeImages(options: MergeImagesOptions) {
   // RGBA 通道数
   const channels = 4;
 
-  // 预扫描所有存在的瓦片路径
-  const existingTiles = new Map<string, string>();
-  const checkTasks = [];
+  let processedStrips = 0;
+  let stopped = false;
+  let running = false;
+  let activeRun: null | Promise<MergeImagesResult> = null;
+  let lastResult: MergeImagesResult | null = null;
 
-  for (let y = 0; y < mergeOptions.rows; y++) {
-    for (let x = 0; x < mergeOptions.cols; x++) {
-      const tileName = mergeOptions.imagePattern
-        .replace('{x}', String(x))
-        .replace('{y}', String(y));
-      const tilePath = path.join(mergeOptions.imagesPath, tileName);
+  async function runOnce(): Promise<MergeImagesResult> {
+    // 复位上一轮状态
+    processedStrips = 0;
+    stopped = false;
+    lastResult = null;
 
-      checkTasks.push(
-        fs
-          .access(tilePath)
-          .then(() => {
-            existingTiles.set(`${x}_${y}`, tilePath);
-          })
-          .catch(() => {}),
+    // 创建并发限制器
+    const limit = pLimit(mergeOptions.concurrency);
+
+    // 预扫描所有存在的瓦片路径
+    const existingTiles = new Map<string, string>();
+    const checkTasks = [];
+
+    for (let y = 0; y < mergeOptions.rows; y++) {
+      for (let x = 0; x < mergeOptions.cols; x++) {
+        const tileName = mergeOptions.imagePattern
+          .replace('{x}', String(x))
+          .replace('{y}', String(y));
+        const tilePath = path.join(mergeOptions.imagesPath, tileName);
+
+        checkTasks.push(
+          fs
+            .access(tilePath)
+            .then(() => {
+              existingTiles.set(`${x}_${y}`, tilePath);
+            })
+            .catch(() => {}),
+        );
+      }
+    }
+    await Promise.all(checkTasks);
+
+    // 确定输出格式
+    const format = mergeOptions.outputPath.split('.').pop()?.toLowerCase();
+
+    // 分配最终图像的原始 Buffer 空间
+    // 警告：如果此分配失败，说明图像太大，无法在内存中处理，需要改用基于磁盘的切片合并工具或更低级的流式库。
+    let finalRawBuffer = Buffer.alloc(totalWidth * totalHeight * channels, 0);
+
+    /**
+     * 处理单个条带并直接写入最终 Buffer
+     */
+    const processAndMergeStrip = async (i: number): Promise<void> => {
+      const composites: sharp.OverlayOptions[] = [];
+
+      for (let j = 0; j < subLoopCount; j++) {
+        let x: number;
+        let y: number;
+
+        if (isHorizontal) {
+          x = j;
+          y = i;
+        } else {
+          x = i;
+          y = j;
+        }
+
+        const key = `${x}_${y}`;
+        const tilePath = existingTiles.get(key);
+
+        if (tilePath) {
+          composites.push({
+            input: tilePath,
+            left: j * mergeOptions.imageWidth,
+            top: 0,
+          });
+        }
+      }
+
+      let stripBuffer: Buffer;
+      if (composites.length === 0) {
+        // 如果没有瓦片，不需要做任何事，因为 finalRawBuffer 已经初始化为 0 (透明)
+        return;
+      } else {
+        // 创建当前条带的图像并获取 Raw Buffer
+        stripBuffer = await sharp({
+          create: {
+            width: totalWidth,
+            height: mergeOptions.imageHeight,
+            channels,
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          },
+        })
+          .composite(composites)
+          .raw()
+          .toBuffer();
+      }
+
+      // 计算偏移量并直接拷贝到最终 Buffer
+      const offset = i * totalWidth * mergeOptions.imageHeight * channels;
+      stripBuffer.copy(finalRawBuffer, offset);
+
+      // 显式释放引用，帮助 GC
+      // eslint-disable-next-line no-useless-assignment
+      stripBuffer = null as any;
+    };
+
+    // 创建所有任务
+    const tasks = [];
+    for (let i = 0; i < mainLoopCount; i++) {
+      tasks.push(
+        limit(async () => {
+          // 已停止：跳过未开始的条带
+          if (stopped) return;
+
+          await processAndMergeStrip(i);
+          processedStrips++;
+
+          // 触发进度回调
+          if (mergeOptions?.onTick) {
+            mergeOptions.onTick({ process: i + 1 });
+          }
+        }),
       );
     }
-  }
-  await Promise.all(checkTasks);
 
-  // 确定输出格式
-  const format = mergeOptions.outputPath.split('.').pop()?.toLowerCase();
+    // 等待所有处理完成
+    await Promise.all(tasks);
 
-  // 分配最终图像的原始 Buffer 空间
-  // 警告：如果此分配失败，说明图像太大，无法在内存中处理，需要改用基于磁盘的切片合并工具或更低级的流式库。
-  let finalRawBuffer = Buffer.alloc(totalWidth * totalHeight * channels, 0);
+    // 此时 finalRawBuffer 已包含完整（或停止前已合成部分）图像数据
 
-  /**
-   * 处理单个条带并直接写入最终 Buffer
-   */
-  const processAndMergeStrip = async (i: number): Promise<void> => {
-    const composites: sharp.OverlayOptions[] = [];
+    // 创建 Sharp 管道进行编码
+    let pipeline = sharp(finalRawBuffer, {
+      raw: {
+        width: totalWidth,
+        height: totalHeight,
+        channels,
+      },
+      limitInputPixels: mergeOptions.sharpPixelLimit,
+    });
 
-    for (let j = 0; j < subLoopCount; j++) {
-      let x: number;
-      let y: number;
-
-      if (isHorizontal) {
-        x = j;
-        y = i;
-      } else {
-        x = i;
-        y = j;
-      }
-
-      const key = `${x}_${y}`;
-      const tilePath = existingTiles.get(key);
-
-      if (tilePath) {
-        composites.push({
-          input: tilePath,
-          left: j * mergeOptions.imageWidth,
-          top: 0,
-        });
-      }
-    }
-
-    let stripBuffer: Buffer;
-    if (composites.length === 0) {
-      // 如果没有瓦片，不需要做任何事，因为 finalRawBuffer 已经初始化为 0 (透明)
-      return;
+    // 根据格式进行编码配置
+    if (format === 'jpg' || format === 'jpeg') {
+      pipeline = pipeline.jpeg({
+        quality: mergeOptions.quality,
+        progressive: true,
+      });
+    } else if (format === 'webp') {
+      pipeline = pipeline.webp({ quality: mergeOptions.quality, effort: 2 });
     } else {
-      // 创建当前条带的图像并获取 Raw Buffer
-      stripBuffer = await sharp({
-        create: {
-          width: totalWidth,
-          height: mergeOptions.imageHeight,
-          channels,
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        },
-      })
-        .composite(composites)
-        .raw()
-        .toBuffer();
+      // 默认 PNG
+      pipeline = pipeline.png({
+        compressionLevel: mergeOptions.compressionLevel,
+        adaptiveFiltering: false,
+      });
     }
 
-    // 计算偏移量并直接拷贝到最终 Buffer
-    const offset = i * totalWidth * mergeOptions.imageHeight * channels;
-    stripBuffer.copy(finalRawBuffer, offset);
+    // 写入文件
+    await pipeline.toFile(mergeOptions.outputPath);
 
-    // 显式释放引用，帮助 GC
-    // eslint-disable-next-line no-useless-assignment
-    stripBuffer = null as any;
-  };
+    // 释放最终 Buffer 引用（虽然函数即将结束）
+    finalRawBuffer = null as any;
 
-  // 创建所有任务
-  const tasks = [];
-  for (let i = 0; i < mainLoopCount; i++) {
-    tasks.push(
-      limit(async () => {
-        await processAndMergeStrip(i);
-
-        // 触发进度回调
-        if (mergeOptions?.onTick) {
-          mergeOptions.onTick({ process: i + 1 });
-        }
-      }),
-    );
+    lastResult = {
+      outputPath: mergeOptions.outputPath,
+      totalWidth,
+      totalHeight,
+      stopped,
+    };
+    return lastResult;
   }
 
-  // 等待所有处理完成
-  await Promise.all(tasks);
-
-  // 此时 finalRawBuffer 已包含完整图像数据，stripBuffers 不再需要
-
-  // 创建 Sharp 管道进行编码
-  let pipeline = sharp(finalRawBuffer, {
-    raw: {
-      width: totalWidth,
-      height: totalHeight,
-      channels,
+  const controller: MergeImagesController = {
+    get processed() {
+      return processedStrips;
     },
-    limitInputPixels: mergeOptions.sharpPixelLimit,
-  });
-
-  // 根据格式进行编码配置
-  if (format === 'jpg' || format === 'jpeg') {
-    pipeline = pipeline.jpeg({
-      quality: mergeOptions.quality,
-      progressive: true,
-    });
-  } else if (format === 'webp') {
-    pipeline = pipeline.webp({ quality: mergeOptions.quality, effort: 2 });
-  } else {
-    // 默认 PNG
-    pipeline = pipeline.png({
-      compressionLevel: mergeOptions.compressionLevel,
-      adaptiveFiltering: false,
-    });
-  }
-
-  // 写入文件
-  await pipeline.toFile(mergeOptions.outputPath);
-
-  // 释放最终 Buffer 引用（虽然函数即将结束）
-  finalRawBuffer = null as any;
-
-  return {
-    outputPath: mergeOptions.outputPath,
-    totalWidth,
-    totalHeight,
+    get total() {
+      return mainLoopCount;
+    },
+    get isRunning() {
+      return running;
+    },
+    get isStopped() {
+      return stopped;
+    },
+    get promise() {
+      return activeRun;
+    },
+    get result() {
+      return lastResult;
+    },
+    getResult() {
+      if (!lastResult) {
+        throw new Error(
+          running ? '合成尚未完成' : '合成尚未开始（请先调用 start()）',
+        );
+      }
+      return lastResult;
+    },
+    start() {
+      // 运行中重复调用：返回同一个 Promise
+      if (activeRun && running) {
+        return activeRun;
+      }
+      running = true;
+      activeRun = runOnce().finally(() => {
+        running = false;
+      });
+      return activeRun;
+    },
+    stop() {
+      // 未在运行则无效果
+      if (!running || stopped) {
+        return;
+      }
+      stopped = true;
+    },
   };
+
+  return controller;
 }

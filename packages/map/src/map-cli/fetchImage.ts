@@ -34,7 +34,12 @@ export async function fetchImagesCli(
     });
     if (!shouldProceed) {
       outro('已取消');
-      return { failCount: 0, successCount: 0, failFiles: [] };
+      return {
+        failCount: 0,
+        successCount: 0,
+        failFiles: [],
+        stopped: false,
+      };
     }
     await fs.rm(mergeOptions.outputPath, { recursive: true, force: true });
   }
@@ -62,7 +67,7 @@ export async function fetchImagesCli(
           `[${mergeOptions.outputPath}]失败: ${url} => ${filename} (${error})`,
         );
       },
-    });
+    }).start();
 
     prog.stop(
       chalk.green(`🎉 下载完成: 成功 ${downRes.successCount} 张, `) +

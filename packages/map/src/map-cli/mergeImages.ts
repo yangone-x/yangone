@@ -58,7 +58,7 @@ export async function mergeImagesCli(options: MergeImagesOptions) {
     onTick: () => {
       prog.advance();
     },
-  });
+  }).start();
 
   prog.stop(
     chalk.green(

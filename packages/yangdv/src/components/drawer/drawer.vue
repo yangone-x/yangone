@@ -113,7 +113,7 @@ onMounted(() => {
     :disabled="appendTo !== 'body' ? false : !appendToBody"
   >
     <Transition
-      name="y-drawer-fade"
+      :name="ns.b('fade')"
       @before-enter="handleBeforeEnter"
       @after-enter="handleAfterEnter"
       @before-leave="handleBeforeLeave"

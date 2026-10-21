@@ -85,7 +85,7 @@ export async function sliceImageCli(options: SliceImageOptions) {
     onTick: ({ x, y, z }) => {
       prog.advance(undefined, `${z}:${x}_${y}`);
     },
-  });
+  }).start();
 
   prog.stop(chalk.green(`✅ 切片成功，文件数：${createRes.tilesGenerated}`));
 

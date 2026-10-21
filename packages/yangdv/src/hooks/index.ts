@@ -5,4 +5,5 @@ export * from './use-id';
 export * from './use-lockscreen';
 export * from './use-namespace';
 export * from './use-popper';
+export * from './use-same-target';
 export * from './use-z-index';
