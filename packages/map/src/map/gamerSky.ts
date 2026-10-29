@@ -28,7 +28,7 @@ export async function genMapData(options: any) {
   // 读取原始数据
   const mapInfo = mergeOptions.mapInfo;
 
-  const regions = mapInfo.gameMapAreas.map((item: any, index: number) => {
+  const regions = (mapInfo.gameMapAreas || []).map((item: any, index: number) => {
     return {
       id: index + 1,
       title: item.name,
